@@ -68,18 +68,14 @@ def send_message(chat_id, text):
 
 def ask_gemini(chat_id, text):
 
-    history = memory.get(chat_id, [])
-
-    history.append({
-        "role": "user",
-        "parts": [{"text": text}]
-    })
-
     payload = {
-        "contents": history,
-        "system_instruction": {
-            "parts": [{"text": SYSTEM_PROMPT}]
-        }
+        "contents": [
+            {
+                "parts": [
+                    {"text": text}
+                ]
+            }
+        ]
     }
 
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
@@ -89,23 +85,10 @@ def ask_gemini(chat_id, text):
     data = r.json()
 
     try:
-        reply = data["candidates"][0]["content"]["parts"][0].get("text", "")
-
-        if not reply:
-            reply = "AI reply empty."
-
+        reply = data["candidates"][0]["content"]["parts"][0]["text"]
     except Exception as e:
-
         print("Gemini error:", data)
-
-        reply = "Mujhe abhi jawab dene me problem ho rahi hai."
-
-    history.append({
-        "role": "model",
-        "parts": [{"text": reply}]
-    })
-
-    memory[chat_id] = history[-20:]
+        reply = "Gemini se response nahi mila."
 
     return reply
 
