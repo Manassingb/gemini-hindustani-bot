@@ -4,9 +4,9 @@ import time
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-# =========================
-# KEEP ALIVE SERVER (Render fix)
-# =========================
+# ======================
+# KEEP ALIVE SERVER
+# ======================
 
 def keep_alive():
 
@@ -21,9 +21,9 @@ def keep_alive():
 
 threading.Thread(target=keep_alive, daemon=True).start()
 
-# =========================
+# ======================
 # CONFIG
-# =========================
+# ======================
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -37,16 +37,15 @@ You are Gemini Hindustani AI.
 
 Rules:
 1. Reply casually like an Indian friend.
-2. If user writes Hindi → reply Hindi.
-3. If user writes Hinglish → reply Hinglish.
-4. If user writes English → reply English.
-5. Never use abusive language.
-6. Keep responses short and friendly.
+2. Hindi → reply Hindi
+3. Hinglish → reply Hinglish
+4. English → reply English
+5. Never use abusive words.
 """
 
-# =========================
+# ======================
 # TELEGRAM FUNCTIONS
-# =========================
+# ======================
 
 def send_typing(chat_id):
 
@@ -55,6 +54,7 @@ def send_typing(chat_id):
         params={"chat_id": chat_id, "action": "typing"}
     )
 
+
 def send_message(chat_id, text):
 
     requests.post(
@@ -62,9 +62,9 @@ def send_message(chat_id, text):
         json={"chat_id": chat_id, "text": text}
     )
 
-# =========================
+# ======================
 # GEMINI AI
-# =========================
+# ======================
 
 def ask_gemini(chat_id, text):
 
@@ -88,13 +88,17 @@ def ask_gemini(chat_id, text):
 
     data = r.json()
 
-try:
-    reply = data["candidates"][0]["content"]["parts"][0].get("text", "")
-    if not reply:
-        reply = "AI reply empty."
-except Exception as e:
-    print("Gemini error:", data)
-    reply = "Mujhe abhi jawab dene me problem ho rahi hai."
+    try:
+        reply = data["candidates"][0]["content"]["parts"][0].get("text", "")
+
+        if not reply:
+            reply = "AI reply empty."
+
+    except Exception as e:
+
+        print("Gemini error:", data)
+
+        reply = "Mujhe abhi jawab dene me problem ho rahi hai."
 
     history.append({
         "role": "model",
@@ -105,9 +109,9 @@ except Exception as e:
 
     return reply
 
-# =========================
+# ======================
 # COMMAND HANDLER
-# =========================
+# ======================
 
 def process_commands(chat_id, text):
 
@@ -142,9 +146,9 @@ def process_commands(chat_id, text):
 
     return False
 
-# =========================
-# MAIN LOOP
-# =========================
+# ======================
+# MAIN BOT LOOP
+# ======================
 
 print("Bot started with long polling.")
 
