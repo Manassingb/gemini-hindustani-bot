@@ -88,10 +88,13 @@ def ask_gemini(chat_id, text):
 
     data = r.json()
 
-    try:
-        reply = data["candidates"][0]["content"]["parts"][0]["text"]
-    except:
-        reply = "Mujhe abhi jawab dene me problem ho rahi hai."
+try:
+    reply = data["candidates"][0]["content"]["parts"][0].get("text", "")
+    if not reply:
+        reply = "AI reply empty."
+except Exception as e:
+    print("Gemini error:", data)
+    reply = "Mujhe abhi jawab dene me problem ho rahi hai."
 
     history.append({
         "role": "model",
