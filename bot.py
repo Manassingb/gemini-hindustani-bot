@@ -1,13 +1,32 @@
 import os
-import time
 import requests
-from dotenv import load_dotenv
+import time
+import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
-load_dotenv()
+# =========================
+# KEEP ALIVE SERVER (Render fix)
+# =========================
+
+def keep_alive():
+
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(b"Bot is running")
+
+    server = HTTPServer(("0.0.0.0", 10000), Handler)
+    server.serve_forever()
+
+threading.Thread(target=keep_alive, daemon=True).start()
+
+# =========================
+# CONFIG
+# =========================
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-REQUEST_TIMEOUT_SECONDS = 30
 
 offset = 0
 memory = {}
@@ -17,27 +36,44 @@ SYSTEM_PROMPT = """
 You are Gemini Hindustani AI.
 
 Rules:
-1. Reply in friendly Indian casual style.
-2. If user speaks Hindi → reply Hindi.
-3. If user speaks Hinglish → reply Hinglish.
-4. If user speaks English → reply English.
+1. Reply casually like an Indian friend.
+2. If user writes Hindi → reply Hindi.
+3. If user writes Hinglish → reply Hinglish.
+4. If user writes English → reply English.
 5. Never use abusive language.
-6. Keep replies simple and natural.
+6. Keep responses short and friendly.
 """
 
+# =========================
+# TELEGRAM FUNCTIONS
+# =========================
+
 def send_typing(chat_id):
+
     requests.get(
         f"https://api.telegram.org/bot{BOT_TOKEN}/sendChatAction",
-        params={"chat_id": chat_id, "action": "typing"},
-        timeout=REQUEST_TIMEOUT_SECONDS,
+        params={"chat_id": chat_id, "action": "typing"}
     )
 
+def send_message(chat_id, text):
+
+    requests.post(
+        f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
+        json={"chat_id": chat_id, "text": text}
+    )
+
+# =========================
+# GEMINI AI
+# =========================
 
 def ask_gemini(chat_id, text):
 
     history = memory.get(chat_id, [])
 
-    history.append({"role": "user", "parts": [{"text": text}]})
+    history.append({
+        "role": "user",
+        "parts": [{"text": text}]
+    })
 
     payload = {
         "contents": history,
@@ -48,7 +84,7 @@ def ask_gemini(chat_id, text):
 
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key={GEMINI_API_KEY}"
 
-    r = requests.post(url, json=payload, timeout=REQUEST_TIMEOUT_SECONDS)
+    r = requests.post(url, json=payload)
 
     data = r.json()
 
@@ -57,21 +93,18 @@ def ask_gemini(chat_id, text):
     except:
         reply = "Mujhe abhi jawab dene me problem ho rahi hai."
 
-    history.append({"role": "model", "parts": [{"text": reply}]})
+    history.append({
+        "role": "model",
+        "parts": [{"text": reply}]
+    })
 
     memory[chat_id] = history[-20:]
 
     return reply
 
-
-def send_message(chat_id, text):
-
-    requests.post(
-        f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
-        json={"chat_id": chat_id, "text": text},
-        timeout=REQUEST_TIMEOUT_SECONDS,
-    )
-
+# =========================
+# COMMAND HANDLER
+# =========================
 
 def process_commands(chat_id, text):
 
@@ -93,6 +126,7 @@ def process_commands(chat_id, text):
                 chat_id,
                 "Language options:\n/lan hindi\n/lan hinglish\n/lan english\n/lan auto"
             )
+
             return True
 
         mode = parts[1].lower()
@@ -105,60 +139,49 @@ def process_commands(chat_id, text):
 
     return False
 
+# =========================
+# MAIN LOOP
+# =========================
 
-def validate_env():
-    missing = []
-    if not BOT_TOKEN:
-        missing.append("BOT_TOKEN")
-    if not GEMINI_API_KEY:
-        missing.append("GEMINI_API_KEY")
-    if missing:
-        raise RuntimeError(
-            f"Missing required environment variable(s): {', '.join(missing)}"
-        )
+print("Bot started with long polling.")
 
+while True:
 
-def run_bot():
-    global offset
-    while True:
-        try:
-            url = f"https://api.telegram.org/bot{BOT_TOKEN}/getUpdates"
+    try:
 
-            params = {
-                "timeout": 60,
-                "offset": offset
-            }
+        url = f"https://api.telegram.org/bot{BOT_TOKEN}/getUpdates"
 
-            response = requests.get(
-                url,
-                params=params,
-                timeout=REQUEST_TIMEOUT_SECONDS + 65,
-            ).json()
+        params = {
+            "timeout": 60,
+            "offset": offset
+        }
 
-            for update in response.get("result", []):
-                offset = update["update_id"] + 1
+        response = requests.get(url, params=params).json()
 
-                message = update.get("message")
+        for update in response.get("result", []):
 
-                if not message:
-                    continue
+            offset = update["update_id"] + 1
 
-                chat_id = message["chat"]["id"]
-                text = message.get("text", "")
+            message = update.get("message")
 
-                if process_commands(chat_id, text):
-                    continue
+            if not message:
+                continue
 
-                send_typing(chat_id)
-                reply = ask_gemini(chat_id, text)
-                send_message(chat_id, reply)
+            chat_id = message["chat"]["id"]
 
-        except Exception as e:
-            print("Error:", e, flush=True)
-            time.sleep(5)
+            text = message.get("text", "")
 
+            if process_commands(chat_id, text):
+                continue
 
-if __name__ == "__main__":
-    validate_env()
-    print("Bot started with long polling.", flush=True)
-    run_bot()
+            send_typing(chat_id)
+
+            reply = ask_gemini(chat_id, text)
+
+            send_message(chat_id, reply)
+
+    except Exception as e:
+
+        print("Error:", e)
+
+        time.sleep(5)
