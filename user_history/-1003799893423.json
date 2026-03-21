@@ -1,0 +1,39 @@
+{
+  "lang": "hinglish",
+  "lang_set_at": 0,
+  "user_lang_overrides": {},
+  "history": [],
+  "tracked_messages": [
+    {
+      "message_id": 2,
+      "user_id": 8426343655,
+      "kind": "media",
+      "has_link": false
+    },
+    {
+      "message_id": 3,
+      "user_id": 8426343655,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 4,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 5,
+      "user_id": 8426343655,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 6,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    }
+  ],
+  "temp_blocked_users": {}
+}

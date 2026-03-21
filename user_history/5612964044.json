@@ -1,0 +1,69 @@
+{
+  "lang": "hinglish",
+  "lang_set_at": 0,
+  "user_lang_overrides": {},
+  "history": [],
+  "tracked_messages": [
+    {
+      "message_id": 1618,
+      "user_id": 5612964044,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 1619,
+      "user_id": 5612964044,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 1620,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 1621,
+      "user_id": 5612964044,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 1622,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 1623,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 1624,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 1625,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 1626,
+      "user_id": 5612964044,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 1627,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    }
+  ],
+  "temp_blocked_users": {}
+}

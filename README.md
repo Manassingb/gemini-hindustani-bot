@@ -34,6 +34,14 @@ cp .env.example .env
 ```env
 BOT_TOKEN=...
 GEMINI_API_KEY=...
+GEMINI_MODELS=gemini-2.0-flash,gemini-2.5-flash
+AI_MIN_INTERVAL_SECONDS=8
+QUOTA_COOLDOWN_SECONDS=120
+MENU_TIMEOUT_SECONDS=60
+MENU_HIDE_SECONDS=30
+MENU_MAX_LIFETIME_SECONDS=120
+POLL_TIMEOUT_SECONDS=15
+ADMIN_CHAT_ID=-1001234567890
 ```
 
 5. Run the bot:
@@ -84,8 +92,23 @@ Every push to `main` will trigger auto-redeploy.
 - Build logs show successful install of `requirements.txt`.
 - Runtime logs show `Bot started with long polling.`
 - Telegram messages receive a response.
+- `/start` shows quick command menu.
+- `/setname Manas` stores preferred name.
+- `/myname` returns saved name.
+- `/status` returns current mode, memory count, and models.
+- `/about` returns AI/developer/admin info.
+- `/models` shows active model list.
+- `/fallback` shows current fallback/cooldown status.
+- `/stopai` disables continuous AI communication mode.
 - `/reset` clears conversation memory.
 - `/lan hindi|hinglish|english|auto` returns language confirmation.
+- Bot responds only when invoked with: `Hindustani AI`, `Gemini`, `Gemini Hindustani`, or when replying to bot's previous message.
+- If user sends only bot name trigger, bot shows 4 communication options (Help/Admin call/Admin message/Audio access).
+- Communication menu is button-based and includes `5. AI with communication` for continuous chat mode.
+- If no menu option is selected within 60 seconds, menu auto-resets.
+- Menu buttons auto-hide in 30 seconds.
+- Menu session max lifetime is 120 seconds (after that AI trigger needed again).
+- For admin routing features, set `ADMIN_CHAT_ID` in `.env`.
 
 ## Troubleshooting
 
@@ -96,6 +119,7 @@ Every push to `main` will trigger auto-redeploy.
   - Confirm no second process is polling same token.
 - Gemini reply errors:
   - Verify `GEMINI_API_KEY` is active and has model access.
+  - If quota is exceeded, bot automatically switches to local fallback replies.
 
 ## Notes
 

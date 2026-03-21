@@ -1,0 +1,552 @@
+{
+  "lang": "hinglish",
+  "lang_set_at": 0,
+  "user_lang_overrides": {},
+  "history": [
+    {
+      "role": "user",
+      "text": "Previous Aira message:\n- 𝙈𝙚𝙬✿, ｗｈｉｚ, Jessica, 👑⃟≛⃝ℭ𝔲𝔱𝔢 𝔟𝔬𝔶🕊️⃟⋆≛⃝, ᴹᴿ°᭄C𝖍Ꭵku࿐\n\nUser reply:\nGud morning 🌅"
+    },
+    {
+      "role": "assistant",
+      "text": "Nahin nahin, morning toh pehle hi ho gaya hai 😊. Ab sun le, kya chahiye? 🤔"
+    },
+    {
+      "role": "user",
+      "text": "Previous Aira message:\nBr, 𝁘 ໍ𓂃❛ • 𝜬 𝜦 𝜥 𝜢 𝜤 • ⤹🦚ˎ˗, 𓄂️𝆺𝅥⃝⭕️ ⃪ͥ͢ ᷟ🇷‌𝘼𝙈 𝆺𝅥⃝🇷‌𝘼𝙈., Khush, Looking\n\nUser reply:\nGood morning"
+    },
+    {
+      "role": "assistant",
+      "text": "Morning toh pehle hi ho gaya hai 😊. Ab sun le, kya chahiye?"
+    },
+    {
+      "role": "user",
+      "text": "Previous Aira message:\n𝐁𝐄𝐍 13🎗️, nesh, ✨ 𝚘𝚛𝚎𝚘 🐼, Prashant, 𝐏𝐑𝐀𝐃𝐄𝐄𝐏\n\nUser reply:\nYo"
+    },
+    {
+      "role": "assistant",
+      "text": "Arre, kya baat hai? 😊 Main toh sun rahi thi, kya chahiye? 🤔"
+    },
+    {
+      "role": "user",
+      "text": "Previous Aira message:\nRavan, Hely, Hein, The, 🍷🥀𝐌𝐢𝐬𝐬 𝐃𝐚𝐫𝐤 𝐕𝐚𝐥𝐥𝐞𝐲 🥂✨\n\nUser reply:\nVery Good morning everybody have a nice day"
+    },
+    {
+      "role": "assistant",
+      "text": "Nahin, morning toh pehle hi ho gaya hai 😊. Ab sun le, kya chahiye?"
+    }
+  ],
+  "tracked_messages": [
+    {
+      "message_id": 24920,
+      "user_id": 8771044326,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24903,
+      "user_id": 8771044326,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24927,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 24928,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 24911,
+      "user_id": 8771044326,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24884,
+      "user_id": 8699636212,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24929,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 24915,
+      "user_id": 8699636212,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24902,
+      "user_id": 8771044326,
+      "kind": "media",
+      "has_link": false
+    },
+    {
+      "message_id": 24901,
+      "user_id": 8771044326,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24887,
+      "user_id": 8699636212,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24921,
+      "user_id": 8771044326,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24909,
+      "user_id": 8771044326,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24913,
+      "user_id": 8771044326,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24905,
+      "user_id": 8771044326,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24907,
+      "user_id": 8771044326,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24930,
+      "user_id": 8227738491,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24931,
+      "user_id": 8227738491,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24933,
+      "user_id": 8771044326,
+      "kind": "media",
+      "has_link": false
+    },
+    {
+      "message_id": 24934,
+      "user_id": 8771044326,
+      "kind": "media",
+      "has_link": false
+    },
+    {
+      "message_id": 24935,
+      "user_id": 8227738491,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24936,
+      "user_id": 8771044326,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24937,
+      "user_id": 8227738491,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24941,
+      "user_id": 8227738491,
+      "kind": "media",
+      "has_link": false
+    },
+    {
+      "message_id": 24942,
+      "user_id": 8771044326,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24943,
+      "user_id": 8227738491,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24945,
+      "user_id": 8227738491,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24944,
+      "user_id": 6731533253,
+      "kind": "media",
+      "has_link": false
+    },
+    {
+      "message_id": 24946,
+      "user_id": 8227738491,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24947,
+      "user_id": 7945133265,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24948,
+      "user_id": 7945133265,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24949,
+      "user_id": 8771044326,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24951,
+      "user_id": 8771044326,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24953,
+      "user_id": 8771044326,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24954,
+      "user_id": 8227738491,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24957,
+      "user_id": 8771044326,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24958,
+      "user_id": 8227738491,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24960,
+      "user_id": 8227738491,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24961,
+      "user_id": 8771044326,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24962,
+      "user_id": 8227738491,
+      "kind": "media",
+      "has_link": false
+    },
+    {
+      "message_id": 24963,
+      "user_id": 8771044326,
+      "kind": "media",
+      "has_link": false
+    },
+    {
+      "message_id": 24964,
+      "user_id": 8771044326,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24966,
+      "user_id": 8699636212,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24967,
+      "user_id": 8771044326,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24969,
+      "user_id": 8771044326,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24971,
+      "user_id": 8771044326,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24972,
+      "user_id": 8699636212,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24973,
+      "user_id": 8699636212,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24974,
+      "user_id": 8699636212,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24976,
+      "user_id": 8747148517,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24977,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 24978,
+      "user_id": 6731533253,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24981,
+      "user_id": 6731533253,
+      "kind": "media",
+      "has_link": false
+    },
+    {
+      "message_id": 24983,
+      "user_id": 8227738491,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24984,
+      "user_id": 8227738491,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24985,
+      "user_id": 8699636212,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24986,
+      "user_id": 8227738491,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24987,
+      "user_id": 8227738491,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24988,
+      "user_id": 8227738491,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24989,
+      "user_id": 8699636212,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24991,
+      "user_id": 8227738491,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24990,
+      "user_id": 8747148517,
+      "kind": "media",
+      "has_link": false
+    },
+    {
+      "message_id": 24993,
+      "user_id": 8699636212,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24994,
+      "user_id": 6731533253,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24995,
+      "user_id": 7753720995,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24996,
+      "user_id": 8227738491,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24997,
+      "user_id": 7753720995,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24999,
+      "user_id": 8193273524,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 25001,
+      "user_id": 6731533253,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 25003,
+      "user_id": 8227738491,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 25004,
+      "user_id": 6731533253,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 25005,
+      "user_id": 8227738491,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 25006,
+      "user_id": 8193273524,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 25009,
+      "user_id": 6731533253,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 25010,
+      "user_id": 6731533253,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 25011,
+      "user_id": 8227738491,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 25012,
+      "user_id": 8573284604,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 25013,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 25014,
+      "user_id": 8227738491,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 25016,
+      "user_id": 8699636212,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 25018,
+      "user_id": 8699636212,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 25020,
+      "user_id": 7945133265,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 25021,
+      "user_id": 6731533253,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 25023,
+      "user_id": 8227738491,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 25024,
+      "user_id": 6731533253,
+      "kind": "text",
+      "has_link": false
+    }
+  ],
+  "temp_blocked_users": {}
+}
