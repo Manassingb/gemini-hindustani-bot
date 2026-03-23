@@ -52,6 +52,7 @@
       "text": "Arre, thoda sa try karo 😊. Aapko refresh karne ke liye apne phone ke settings mein jaana hoga. Phone ko restart karke dekhna, phir fir se Telegram app kholein. Kya aapne isse try kiya hai? Ya koi aur problem hai? Main aapki madad karoongi 💖."
     }
   ],
+  "interaction_contexts": [],
   "tracked_messages": [
     {
       "message_id": 1611,
@@ -169,6 +170,48 @@
     },
     {
       "message_id": 1640,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 1648,
+      "user_id": 8577122526,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 1650,
+      "user_id": 8577122526,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 1651,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 1652,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 1653,
+      "user_id": 8577122526,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 1654,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 1657,
       "user_id": 0,
       "kind": "bot_text",
       "has_link": false

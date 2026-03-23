@@ -28,6 +28,7 @@
       "text": "Main yahin hun, aapki help ke liye. ✨"
     }
   ],
+  "interaction_contexts": [],
   "tracked_messages": [
     {
       "message_id": 101,
@@ -321,6 +322,12 @@
       "message_id": 420,
       "user_id": 1182671955,
       "kind": "media",
+      "has_link": false
+    },
+    {
+      "message_id": 452,
+      "user_id": 0,
+      "kind": "bot_text",
       "has_link": false
     }
   ],

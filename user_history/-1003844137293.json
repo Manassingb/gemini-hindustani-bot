@@ -6,15 +6,9 @@
   "interaction_contexts": [],
   "tracked_messages": [
     {
-      "message_id": 1641,
-      "user_id": 8163933528,
-      "kind": "text",
-      "has_link": false
-    },
-    {
-      "message_id": 1642,
-      "user_id": 0,
-      "kind": "bot_text",
+      "message_id": 67408,
+      "user_id": 7751206381,
+      "kind": "media",
       "has_link": false
     }
   ],

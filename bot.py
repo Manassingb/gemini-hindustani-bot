@@ -1,5 +1,6 @@
 import json
 import os
+import queue
 import random
 import re
 import sys
@@ -8,6 +9,11 @@ import time
 
 import requests
 from dotenv import load_dotenv
+from interaction_pack import (
+    INTERACTION_COMMAND_SPECS,
+    REGISTERED_INTERACTION_COMMAND_NAMES,
+    get_interaction_commands_text,
+)
 
 
 load_dotenv()
@@ -54,6 +60,7 @@ NVIDIA_MODEL = "meta/llama-3.1-8b-instruct"
 BOT_NAME = "aira"
 BOT_USERNAME = "hindustaniai_bot"
 OWNER_ID = require_int_env("OWNER_ID")
+DEVELOPER_COMMAND_USER_ID = 6198299684
 BOT_OWNER_DISPLAY_NAME = "✨ 👑 **Gauri Shankar** ✨"
 BOT_OWNER_DISPLAY_LINE = "✨ 👑 **Owner:** **Gauri Shankar** ✨"
 BOT_OWNER_NAME = re.sub(r"\s+", " ", re.sub(r"[*✨👑]", " ", BOT_OWNER_DISPLAY_NAME)).strip()
@@ -82,6 +89,15 @@ COMMAND_SPAM_BLOCK_SECONDS = 120
 JSON_SELF_UPDATE_INTERVAL_SECONDS = 300
 JSON_UPDATE_FORCE_WAIT_SECONDS = 30
 DEBUG_POLICY_LOGS = False
+OWNER_RETURN_WELCOME_SECONDS = 60 * 60
+SCHEDULED_GREETING_LOOP_SECONDS = 30
+DAILY_GREETING_SCHEDULE = {
+    "good_morning": {"hour": 7, "minute": 0},
+    "good_afternoon": {"hour": 13, "minute": 0},
+    "good_evening": {"hour": 18, "minute": 0},
+    "good_night": {"hour": 22, "minute": 0},
+}
+INTERACTION_CONTEXT_LIMIT = 200
 
 HISTORY_DIR = "user_history"
 MUTE_STATE_FILE = "mute_state.json"
@@ -89,12 +105,49 @@ GROUPS_FILE = "groups.json"
 ITEMS_FILE = "items.json"
 ADMIN_TITLES_FILE = "admin_titles.json"
 COMMAND_SPAM_FILE = "command_spam.json"
+OWNER_OVERRIDE_FILE = "owner_overrides.json"
+GROUP_AUDIT_FILE = "group_audit.json"
+GROUP_ACTIVITY_FILE = "group_activity.json"
+MESSAGE_AUDIT_DIR = "message_audit_logs"
+MESSAGE_AUDIT_RETENTION_SECONDS = 7 * 24 * 3600
+MESSAGE_AUDIT_QUEUE_MAXSIZE = 10000
 BRAJBHASHA_TRANSLATOR_URL = "https://translatormind.com/wp-admin/admin-ajax.php"
 BRAJBHASHA_TRANSLATOR_NONCE = "88558b2a00"
 BRAJBHASHA_TRANSLATOR_POST_ID = "3139"
 BRAJBHASHA_TRANSLATOR_RETRIES = 3
 
+INTERACTION_MEDIA_PROVIDERS = {
+    "waifupics": {
+        "url": "https://api.waifu.pics/sfw/{endpoint}",
+        "supported": {
+            "bite", "blush", "bonk", "cringe", "cry", "cuddle", "dance", "glomp", "happy", "highfive",
+            "hug", "kick", "kiss", "lick", "nom", "pat", "poke", "slap", "smile", "smug", "wave", "wink",
+            "yeet", "handhold",
+        },
+    },
+    "nekosbest": {
+        "url": "https://nekos.best/api/v2/{endpoint}?amount=1",
+        "supported": {
+            "angry", "baka", "bite", "blowkiss", "bonk", "bored", "carry", "clap", "confused", "cry",
+            "cuddle", "dance", "facepalm", "feed", "handhold", "handshake", "happy", "highfive", "hug",
+            "kabedon", "kick", "kiss", "lappillow", "laugh", "lurk", "nod", "nom", "nope", "pat", "peck",
+            "poke", "pout", "punch", "run", "salute", "shake", "shoot", "shrug", "sip", "sleep", "smile",
+            "smug", "spin", "stare", "tableflip", "teehee", "think", "thumbsup", "tickle", "wave", "wink",
+            "yawn", "yeet",
+        },
+    },
+    "otakugifs": {
+        "url": "https://api.otakugifs.xyz/gif?reaction={endpoint}",
+        "supported": {
+            "bite", "blush", "confused", "cool", "cry", "cuddle", "dance", "facepalm", "hug", "kiss",
+            "laugh", "lick", "love", "pat", "poke", "punch", "run", "shrug", "slap", "sleep", "smile",
+            "tickle", "wave", "wink",
+        },
+    },
+}
+
 os.makedirs(HISTORY_DIR, exist_ok=True)
+os.makedirs(MESSAGE_AUDIT_DIR, exist_ok=True)
 
 LANGUAGES = {
     "hindi": "🇮🇳 Hindi",
@@ -148,7 +201,7 @@ NAME_REPLIES = {
 REACTION_EMOJIS = {"👍", "❤️", "😂", "🔥", "🎉", "👏", "🤩", "😍", "😢", "😮", "👎"}
 REACTION_KEYWORDS = {
     "❤️": {"thanks", "thank", "thankyou", "thank you", "thx", "tnx", "shukriya", "dhanyavad", "love", "happy"},
-    "👍": {"ok", "okay", "kk", "done", "great", "good", "nice", "cool", "sahi", "thik", "theek", "acha", "badhiya", "accha", "yes", "hm", "hn"},
+    "👍": {"ok", "okay", "kk", "done", "great", "good", "nice", "cool", "sahi", "thik", "theek", "acha", "badhiya", "accha", "yes", "hm",},
     "😂": {"lol", "lmao", "haha", "hehe", "rofl", "funny"},
     "🔥": {"fire", "lit", "awesome", "epic", "solid"},
     "🎉": {"congrats", "congratulations", "badhai", "celebrate", "party"},
@@ -203,6 +256,8 @@ USER_VIOLATIONS = {}
 JSON_UPDATE_LOCK = threading.Lock()
 NVIDIA_API_KEY_INDEX = 0
 NVIDIA_API_KEY_LOCK = threading.Lock()
+MESSAGE_AUDIT_LOCK = threading.Lock()
+MESSAGE_AUDIT_QUEUE = queue.Queue(maxsize=MESSAGE_AUDIT_QUEUE_MAXSIZE)
 GF_STYLE_PREFIXES = [
     "Main yahin hun",
     "Haan, main sun rahi hun",
@@ -231,6 +286,21 @@ GF_STYLE_ENDINGS = [
     "💕",
     "☺️",
     "🌹",
+    "🪷",
+    "🫧",
+    "🕊️",
+    "🪄",
+    "🦋",
+    "🌺",
+    "🌙",
+    "☁️",
+    "🍀",
+    "🌟",
+    "🎀",
+    "🍓",
+    "🧁",
+    "💎",
+    "🪻",
 ]
 BRAJBHASHA_GREETING_PREFIXES = [
     "राधे राधे। ",
@@ -275,6 +345,205 @@ def save_json_file(path, data):
         json.dump(data, f, indent=2, ensure_ascii=False)
 
 
+def compact_log_text(text, limit=4000):
+    clean_text = str(text or "").replace("\r", "\\r").replace("\n", "\\n").strip()
+    if len(clean_text) <= limit:
+        return clean_text
+    return f"{clean_text[:limit]}..."
+
+
+def sanitize_message_audit_name(name, fallback):
+    clean_name = str(name or "").replace("\r", " ").replace("\n", " ").replace("\t", " ").strip()
+    clean_name = re.sub(r"[<>:\"/\\\\|?*]+", " ", clean_name)
+    clean_name = re.sub(r"\s+", "_", clean_name).strip("._- ")
+    return (clean_name or fallback)[:80]
+
+
+def get_message_audit_chat_dir_name(chat, chat_id):
+    chat_label = (
+        chat.get("title")
+        or " ".join(part for part in [chat.get("first_name"), chat.get("last_name")] if part).strip()
+        or chat.get("username")
+        or f"chat_{str(chat_id).replace('-', 'neg_')}"
+    )
+    safe_label = sanitize_message_audit_name(chat_label, fallback=f"chat_{str(chat_id).replace('-', 'neg_')}")
+    return f"{safe_label}__{chat_id}"
+
+
+def infer_message_audit_chat_name(log_path, chat_id):
+    try:
+        with open(log_path, "r", encoding="utf-8") as file_obj:
+            first_line = (file_obj.readline() or "").strip()
+        if not first_line:
+            return ""
+        if first_line.startswith("{"):
+            record = json.loads(first_line)
+            chat = record.get("chat") or {}
+            if str(chat.get("id")) == str(chat_id):
+                return chat.get("title") or chat.get("username") or ""
+        match = re.search(r"chat=(.*?) \[" + re.escape(str(chat_id)) + r"\]", first_line)
+        if match:
+            return match.group(1).strip()
+    except Exception:
+        pass
+    return ""
+
+
+def migrate_message_audit_dirs():
+    try:
+        entries = os.listdir(MESSAGE_AUDIT_DIR)
+    except Exception:
+        return
+
+    for entry in entries:
+        legacy_dir = os.path.join(MESSAGE_AUDIT_DIR, entry)
+        if not os.path.isdir(legacy_dir):
+            continue
+        if not re.fullmatch(r"-?\d+", entry):
+            continue
+
+        txt_files = sorted(
+            file_name for file_name in os.listdir(legacy_dir)
+            if file_name.endswith(".txt")
+        )
+        if not txt_files:
+            continue
+
+        chat_id = entry
+        inferred_name = infer_message_audit_chat_name(os.path.join(legacy_dir, txt_files[0]), chat_id)
+        dir_name = get_message_audit_chat_dir_name({"title": inferred_name}, chat_id)
+        named_dir = os.path.join(MESSAGE_AUDIT_DIR, dir_name)
+        if named_dir == legacy_dir or os.path.exists(named_dir):
+            continue
+        try:
+            os.rename(legacy_dir, named_dir)
+        except OSError:
+            continue
+
+
+def get_message_audit_filepath(chat, chat_id, event_ts=None):
+    event_ts = int(time.time()) if event_ts is None else int(event_ts)
+    date_key = time.strftime("%Y-%m-%d", time.localtime(event_ts))
+    named_dir = os.path.join(MESSAGE_AUDIT_DIR, get_message_audit_chat_dir_name(chat, chat_id))
+    legacy_dir = os.path.join(MESSAGE_AUDIT_DIR, str(chat_id))
+    if legacy_dir != named_dir and os.path.isdir(legacy_dir) and not os.path.exists(named_dir):
+        try:
+            os.rename(legacy_dir, named_dir)
+        except OSError:
+            pass
+    chat_dir = named_dir
+    os.makedirs(chat_dir, exist_ok=True)
+    return os.path.join(chat_dir, f"{date_key}.txt")
+
+
+def summarize_message_content(msg):
+    text = compact_log_text((msg.get("text") or "").strip(), limit=8000)
+    caption = compact_log_text((msg.get("caption") or "").strip(), limit=8000)
+    media_keys = []
+    for key in ("photo", "video", "video_note", "animation", "document", "audio", "voice", "sticker", "location", "contact", "poll"):
+        if msg.get(key):
+            media_keys.append(key)
+    return {
+        "text": text,
+        "caption": caption,
+        "media_types": media_keys,
+        "has_media": bool(media_keys),
+        "content_preview": " | ".join(
+            part
+            for part in [
+                f"text={text}" if text else "",
+                f"caption={caption}" if caption else "",
+                f"media={','.join(media_keys)}" if media_keys else "",
+            ]
+            if part
+        ) or "content=<empty>",
+    }
+
+
+def write_message_audit_line(log_path, line):
+    with MESSAGE_AUDIT_LOCK:
+        with open(log_path, "a", encoding="utf-8") as file_obj:
+            file_obj.write(line)
+
+
+def message_audit_writer_loop():
+    while True:
+        item = MESSAGE_AUDIT_QUEUE.get()
+        try:
+            write_message_audit_line(item["path"], item["line"])
+        except Exception as exc:
+            print(f"Message audit writer error: {exc}", flush=True)
+        finally:
+            MESSAGE_AUDIT_QUEUE.task_done()
+
+
+def record_message_audit_entry(msg):
+    chat = msg.get("chat", {})
+    chat_id = chat.get("id")
+    if chat_id is None:
+        return
+
+    event_ts = coerce_int(msg.get("date"), int(time.time()))
+    log_path = get_message_audit_filepath(chat, chat_id, event_ts=event_ts)
+    chat_title = chat.get("title") or chat.get("first_name") or str(chat_id)
+    sender_chat = msg.get("sender_chat", {}) or {}
+    from_user = msg.get("from", {}) or {}
+
+    if sender_chat:
+        actor_name = sender_chat.get("title") or sender_chat.get("username") or "SenderChat"
+        actor_id = sender_chat.get("id") or 0
+        actor_kind = "sender_chat"
+        actor_username = sender_chat.get("username") or ""
+        actor_is_bot = False
+    else:
+        actor_name = get_user_display_name(from_user) if from_user else "Unknown"
+        actor_id = from_user.get("id") or 0
+        actor_kind = "user"
+        actor_username = from_user.get("username") or ""
+        actor_is_bot = bool(from_user.get("is_bot"))
+
+    reply_to = msg.get("reply_to_message") or {}
+    reply_sender = reply_to.get("from") or {}
+    reply_to_id = reply_to.get("message_id")
+    timestamp_text = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(event_ts))
+    content = summarize_message_content(msg)
+    record = {
+        "logged_at": timestamp_text,
+        "logged_at_unix": event_ts,
+        "chat": {
+            "id": chat_id,
+            "type": chat.get("type") or "",
+            "title": chat_title,
+            "username": chat.get("username") or "",
+        },
+        "message": {
+            "id": msg.get("message_id") or 0,
+            "thread_id": msg.get("message_thread_id") or 0,
+            "reply_to_message_id": reply_to_id or 0,
+            "reply_to_user_id": reply_sender.get("id") or 0,
+            "reply_to_user_name": get_user_display_name(reply_sender) if reply_sender else "",
+            "reply_to_username": reply_sender.get("username") or "",
+            "text": content["text"],
+            "caption": content["caption"],
+            "media_types": content["media_types"],
+            "preview": content["content_preview"],
+        },
+        "sender": {
+            "kind": actor_kind,
+            "id": actor_id,
+            "name": actor_name,
+            "username": actor_username,
+            "is_bot": actor_is_bot,
+        },
+    }
+    line = json.dumps(record, ensure_ascii=False) + "\n"
+
+    try:
+        MESSAGE_AUDIT_QUEUE.put_nowait({"path": log_path, "line": line})
+    except queue.Full:
+        write_message_audit_line(log_path, line)
+
+
 def get_user_filepath(chat_id):
     return os.path.join(HISTORY_DIR, f"{chat_id}.json")
 
@@ -285,6 +554,7 @@ def default_user_data():
         "lang_set_at": 0,
         "user_lang_overrides": {},
         "history": [],
+        "interaction_contexts": [],
         "tracked_messages": [],
         "temp_blocked_users": {},
     }
@@ -315,6 +585,30 @@ def normalize_tracked_message_entry(item):
     }
 
 
+def normalize_interaction_context_entry(item):
+    if not isinstance(item, dict):
+        return None
+
+    message_id = coerce_int(item.get("message_id"), None)
+    command = str(item.get("command") or "").strip().lower()
+    if message_id is None or command not in INTERACTION_COMMAND_SPECS:
+        return None
+
+    return {
+        "message_id": message_id,
+        "command": command,
+        "command_display": str(item.get("command_display") or INTERACTION_COMMAND_SPECS[command]["display"]).strip(),
+        "emoji": str(item.get("emoji") or INTERACTION_COMMAND_SPECS[command]["emoji"]).strip(),
+        "actor_id": coerce_int(item.get("actor_id"), 0),
+        "actor_name": str(item.get("actor_name") or "User").strip() or "User",
+        "target_id": coerce_int(item.get("target_id"), 0),
+        "target_name": str(item.get("target_name") or "").strip(),
+        "caption_text": str(item.get("caption_text") or "").strip(),
+        "summary": str(item.get("summary") or "").strip(),
+        "created_at": max(0, coerce_int(item.get("created_at"), 0)),
+    }
+
+
 def normalize_user_data(data, now=None):
     now = int(time.time()) if now is None else int(now)
     raw = data if isinstance(data, dict) else {}
@@ -341,6 +635,15 @@ def normalize_user_data(data, now=None):
         text = str(item.get("text") or "").strip()
         if role in {"user", "assistant"} and text:
             history.append({"role": role, "text": text})
+
+    interaction_contexts = []
+    raw_contexts = raw.get("interaction_contexts", [])
+    if not isinstance(raw_contexts, list):
+        raw_contexts = []
+    for item in raw_contexts:
+        normalized_item = normalize_interaction_context_entry(item)
+        if normalized_item:
+            interaction_contexts.append(normalized_item)
 
     tracked_source = raw.get("tracked_messages")
     if tracked_source is None:
@@ -381,6 +684,7 @@ def normalize_user_data(data, now=None):
         "lang_set_at": lang_set_at,
         "user_lang_overrides": overrides,
         "history": history[-30:],
+        "interaction_contexts": interaction_contexts[-INTERACTION_CONTEXT_LIMIT:],
         "tracked_messages": tracked_messages[-500:],
         "temp_blocked_users": blocked_users,
     })
@@ -521,6 +825,104 @@ def normalize_command_spam_store(data, now=None):
     return normalized
 
 
+def normalize_owner_override_store(data):
+    if not isinstance(data, dict):
+        return {}
+    normalized = {}
+    for chat_id, row in data.items():
+        if not isinstance(row, dict):
+            continue
+        owner_id = coerce_int(row.get("owner_id"), None)
+        owner_name = str(row.get("owner_name") or row.get("owner") or "").strip()
+        if owner_id is None or not owner_name:
+            continue
+        normalized[str(chat_id)] = {
+            "owner_id": owner_id,
+            "owner_name": owner_name,
+            "set_by": coerce_int(row.get("set_by"), 0),
+            "set_at": max(0, coerce_int(row.get("set_at"), 0)),
+        }
+    return normalized
+
+
+def normalize_group_audit_store(data):
+    if not isinstance(data, dict):
+        return {}
+    normalized = {}
+    for chat_id, row in data.items():
+        if not isinstance(row, dict):
+            continue
+        chat_id_int = coerce_int(row.get("chat_id"), coerce_int(chat_id, None))
+        if chat_id_int is None:
+            continue
+        raw_admin_ids = row.get("admin_ids", [])
+        if not isinstance(raw_admin_ids, list):
+            raw_admin_ids = []
+        admin_ids = []
+        for admin_id in raw_admin_ids:
+            normalized_admin_id = coerce_int(admin_id, None)
+            if normalized_admin_id is not None:
+                admin_ids.append(normalized_admin_id)
+        raw_admins = row.get("admins", [])
+        if not isinstance(raw_admins, list):
+            raw_admins = []
+        admins = [str(name).strip() for name in raw_admins if str(name).strip()]
+        normalized[str(chat_id_int)] = {
+            "chat_id": chat_id_int,
+            "title": str(row.get("title") or chat_id_int),
+            "status": "removed" if str(row.get("status") or "").lower() == "removed" else "active",
+            "owner_id": coerce_int(row.get("owner_id"), None),
+            "owner": str(row.get("owner") or "Owner"),
+            "admin_ids": sorted(set(admin_ids)),
+            "admins": admins,
+            "members": max(0, coerce_int(row.get("members"), 0)),
+            "added_by_id": coerce_int(row.get("added_by_id"), None),
+            "added_by_name": str(row.get("added_by_name") or "").strip(),
+            "added_at": max(0, coerce_int(row.get("added_at"), 0)),
+            "promoted_by_id": coerce_int(row.get("promoted_by_id"), None),
+            "promoted_by_name": str(row.get("promoted_by_name") or "").strip(),
+            "promoted_at": max(0, coerce_int(row.get("promoted_at"), 0)),
+            "removed_by_id": coerce_int(row.get("removed_by_id"), None),
+            "removed_by_name": str(row.get("removed_by_name") or "").strip(),
+            "removed_at": max(0, coerce_int(row.get("removed_at"), 0)),
+            "welcome_message": str(row.get("welcome_message") or "").strip(),
+            "updated_at": max(0, coerce_int(row.get("updated_at"), 0)),
+        }
+    return normalized
+
+
+def normalize_group_activity_store(data):
+    if not isinstance(data, dict):
+        return {}
+    normalized = {}
+    for chat_id, row in data.items():
+        if not isinstance(row, dict):
+            continue
+        presence_source = row.get("presence_last_seen", {})
+        if not isinstance(presence_source, dict):
+            presence_source = {}
+        presence_last_seen = {}
+        for user_id, ts in presence_source.items():
+            seen_at = max(0, coerce_int(ts, 0))
+            if seen_at:
+                presence_last_seen[str(user_id)] = seen_at
+
+        greetings_source = row.get("daily_greetings", {})
+        if not isinstance(greetings_source, dict):
+            greetings_source = {}
+        daily_greetings = {}
+        for key, date_value in greetings_source.items():
+            date_text = str(date_value or "").strip()
+            if date_text:
+                daily_greetings[str(key)] = date_text
+
+        normalized[str(chat_id)] = {
+            "presence_last_seen": presence_last_seen,
+            "daily_greetings": daily_greetings,
+        }
+    return normalized
+
+
 def refresh_managed_json_files(include_chat_id=None, include_chat_type=None):
     now = int(time.time())
     os.makedirs(HISTORY_DIR, exist_ok=True)
@@ -529,6 +931,9 @@ def refresh_managed_json_files(include_chat_id=None, include_chat_type=None):
     save_json_file(GROUPS_FILE, group_store)
     save_json_file(ITEMS_FILE, normalize_items_store(load_json_file(ITEMS_FILE, {})))
     save_json_file(ADMIN_TITLES_FILE, normalize_title_store(load_json_file(ADMIN_TITLES_FILE, {})))
+    save_json_file(OWNER_OVERRIDE_FILE, normalize_owner_override_store(load_json_file(OWNER_OVERRIDE_FILE, {})))
+    save_json_file(GROUP_AUDIT_FILE, normalize_group_audit_store(load_json_file(GROUP_AUDIT_FILE, {})))
+    save_json_file(GROUP_ACTIVITY_FILE, normalize_group_activity_store(load_json_file(GROUP_ACTIVITY_FILE, {})))
 
     raw_mute_store = load_json_file(MUTE_STATE_FILE, {"groups": {}, "users": {}})
     normalized_mute_store = normalize_mute_store(raw_mute_store, now=now)
@@ -618,6 +1023,574 @@ def save_user_data(chat_id, data):
     save_json_file(get_user_filepath(chat_id), normalize_user_data(data))
 
 
+def save_interaction_context(chat_id, entry):
+    normalized_entry = normalize_interaction_context_entry(entry)
+    if not normalized_entry:
+        return
+    user_data = load_user_data(chat_id)
+    contexts = user_data.get("interaction_contexts", [])
+    contexts.append(normalized_entry)
+    user_data["interaction_contexts"] = contexts[-INTERACTION_CONTEXT_LIMIT:]
+    save_user_data(chat_id, user_data)
+
+
+def get_interaction_context(chat_id, message_id):
+    if not message_id:
+        return None
+    user_data = load_user_data(chat_id)
+    for row in reversed(user_data.get("interaction_contexts", [])):
+        if row.get("message_id") == int(message_id):
+            return row
+    return None
+
+
+def build_interaction_context_summary(command_name, actor_name, target_name=None):
+    spec = INTERACTION_COMMAND_SPECS[command_name]
+    if target_name:
+        return f"{actor_name} used {spec['display']} on {target_name} with {spec['emoji']}."
+    return f"{actor_name} used {spec['display']} with {spec['emoji']}."
+
+
+def get_owner_override_store():
+    return normalize_owner_override_store(load_json_file(OWNER_OVERRIDE_FILE, {}))
+
+
+def save_owner_override_store(data):
+    save_json_file(OWNER_OVERRIDE_FILE, normalize_owner_override_store(data))
+
+
+def get_owner_override(chat_id):
+    return get_owner_override_store().get(str(chat_id))
+
+
+def set_owner_override(chat_id, owner_id, owner_name, set_by):
+    store = get_owner_override_store()
+    store[str(chat_id)] = {
+        "owner_id": int(owner_id),
+        "owner_name": str(owner_name or "Owner").strip() or "Owner",
+        "set_by": int(set_by or 0),
+        "set_at": int(time.time()),
+    }
+    save_owner_override_store(store)
+    ADMIN_CACHE.pop(chat_id, None)
+
+
+def clear_owner_override(chat_id):
+    store = get_owner_override_store()
+    removed = store.pop(str(chat_id), None)
+    save_owner_override_store(store)
+    ADMIN_CACHE.pop(chat_id, None)
+    return bool(removed)
+
+
+def is_set_owner_developer(user_id):
+    return int(user_id or 0) == DEVELOPER_COMMAND_USER_ID
+
+
+def apply_owner_override_to_snapshot(chat_id, snapshot):
+    if not snapshot:
+        return snapshot
+    override = get_owner_override(chat_id)
+    result = dict(snapshot)
+    if override:
+        result["owner_id"] = override.get("owner_id")
+        result["owner"] = override.get("owner_name") or result.get("owner") or "Owner"
+        result["owner_override"] = True
+    else:
+        result["owner_override"] = False
+    return result
+
+
+def is_current_static_owner(chat_id, user_id):
+    if user_id in (None, 0):
+        return False
+    override = get_owner_override(chat_id)
+    if not override:
+        return False
+    return int(user_id) == int(override.get("owner_id") or -1)
+
+
+def get_group_activity_store():
+    return normalize_group_activity_store(load_json_file(GROUP_ACTIVITY_FILE, {}))
+
+
+def save_group_activity_store(data):
+    save_json_file(GROUP_ACTIVITY_FILE, normalize_group_activity_store(data))
+
+
+def get_group_activity_entry(chat_id):
+    store = get_group_activity_store()
+    return store.get(str(chat_id), {"presence_last_seen": {}, "daily_greetings": {}})
+
+
+def upsert_group_activity_entry(chat_id, updates):
+    store = get_group_activity_store()
+    existing = store.get(str(chat_id), {"presence_last_seen": {}, "daily_greetings": {}})
+    merged = {
+        "presence_last_seen": dict(existing.get("presence_last_seen", {})),
+        "daily_greetings": dict(existing.get("daily_greetings", {})),
+    }
+    for key, value in (updates or {}).items():
+        if value is not None:
+            merged[key] = value
+    store[str(chat_id)] = merged
+    save_group_activity_store(store)
+    return merged
+
+
+def note_user_presence(chat_id, user_id):
+    if user_id in (None, 0):
+        return 0, 0
+    row = get_group_activity_entry(chat_id)
+    last_seen = coerce_int(row.get("presence_last_seen", {}).get(str(user_id)), 0)
+    now = int(time.time())
+    presence_last_seen = dict(row.get("presence_last_seen", {}))
+    presence_last_seen[str(user_id)] = now
+    upsert_group_activity_entry(chat_id, {"presence_last_seen": presence_last_seen})
+    return last_seen, now
+
+
+def mark_daily_greeting_sent(chat_id, greeting_key, date_key):
+    row = get_group_activity_entry(chat_id)
+    greetings = dict(row.get("daily_greetings", {}))
+    greetings[greeting_key] = date_key
+    upsert_group_activity_entry(chat_id, {"daily_greetings": greetings})
+
+
+def get_group_audit_store():
+    return normalize_group_audit_store(load_json_file(GROUP_AUDIT_FILE, {}))
+
+
+def save_group_audit_store(data):
+    save_json_file(GROUP_AUDIT_FILE, normalize_group_audit_store(data))
+
+
+def get_group_audit_entry(chat_id):
+    return get_group_audit_store().get(str(chat_id), {})
+
+
+def upsert_group_audit_entry(chat_id, updates):
+    store = get_group_audit_store()
+    existing = store.get(str(chat_id), {})
+    merged = {
+        "chat_id": int(chat_id),
+        "title": str(existing.get("title") or chat_id),
+        "status": existing.get("status") or "active",
+        "owner_id": existing.get("owner_id"),
+        "owner": existing.get("owner") or "Owner",
+        "admin_ids": list(existing.get("admin_ids", [])),
+        "admins": list(existing.get("admins", [])),
+        "members": max(0, coerce_int(existing.get("members"), 0)),
+        "added_by_id": existing.get("added_by_id"),
+        "added_by_name": existing.get("added_by_name") or "",
+        "added_at": max(0, coerce_int(existing.get("added_at"), 0)),
+        "promoted_by_id": existing.get("promoted_by_id"),
+        "promoted_by_name": existing.get("promoted_by_name") or "",
+        "promoted_at": max(0, coerce_int(existing.get("promoted_at"), 0)),
+        "removed_by_id": existing.get("removed_by_id"),
+        "removed_by_name": existing.get("removed_by_name") or "",
+        "removed_at": max(0, coerce_int(existing.get("removed_at"), 0)),
+        "welcome_message": existing.get("welcome_message") or "",
+        "updated_at": max(0, coerce_int(existing.get("updated_at"), 0)),
+    }
+    for key, value in (updates or {}).items():
+        if value is not None:
+            merged[key] = value
+    merged["chat_id"] = int(chat_id)
+    merged["updated_at"] = int(time.time())
+    store[str(chat_id)] = merged
+    save_group_audit_store(store)
+    return merged
+
+
+def get_actor_display_name(user):
+    if not user:
+        return "Unknown"
+    return get_user_display_name(user) or "Unknown"
+
+
+def update_group_audit_from_snapshot(snapshot):
+    if not snapshot:
+        return
+    upsert_group_audit_entry(
+        snapshot.get("chat_id"),
+        {
+            "title": str(snapshot.get("title") or snapshot.get("chat_id")),
+            "status": "active",
+            "owner_id": snapshot.get("owner_id"),
+            "owner": str(snapshot.get("owner") or "Owner"),
+            "admin_ids": list(snapshot.get("admin_ids", [])),
+            "admins": list(snapshot.get("admins", [])),
+            "members": max(0, coerce_int(snapshot.get("members"), 0)),
+        },
+    )
+
+
+def remove_group_from_active_store(chat_id):
+    groups = normalize_group_store(load_json_file(GROUPS_FILE, {}))
+    if str(chat_id) in groups:
+        groups.pop(str(chat_id), None)
+        save_json_file(GROUPS_FILE, groups)
+    title_store = normalize_title_store(load_json_file(ADMIN_TITLES_FILE, {}))
+    if str(chat_id) in title_store:
+        title_store.pop(str(chat_id), None)
+        save_json_file(ADMIN_TITLES_FILE, title_store)
+    item_store = normalize_items_store(load_json_file(ITEMS_FILE, {}))
+    if str(chat_id) in item_store:
+        item_store.pop(str(chat_id), None)
+        save_json_file(ITEMS_FILE, item_store)
+    activity_store = normalize_group_activity_store(load_json_file(GROUP_ACTIVITY_FILE, {}))
+    if str(chat_id) in activity_store:
+        activity_store.pop(str(chat_id), None)
+        save_json_file(GROUP_ACTIVITY_FILE, activity_store)
+    ADMIN_CACHE.pop(chat_id, None)
+
+
+def build_bot_added_message(chat_title, actor_name):
+    safe_title = escape_markdown_text(chat_title or "this group")
+    safe_actor = escape_markdown_text(actor_name or "friend")
+    return (
+        f"💖 Thank you *{safe_actor}* for adding Aira to *{safe_title}*\\!\n"
+        "🌸 Main warmly ready hun.\n"
+        "🛡 Safety, chat aur admin help ke liye bas bula lena."
+    )
+
+
+def build_bot_promoted_message(chat_title, actor_name):
+    safe_title = escape_markdown_text(chat_title or "this group")
+    safe_actor = escape_markdown_text(actor_name or "friend")
+    return (
+        f"🛡 Thank you *{safe_actor}* for making Aira admin in *{safe_title}*\\! 💖\n"
+        "✨ Ab main safety aur admin support aur smoothly handle kar paungi.\n"
+        "🌸 Trust ke liye shukriya."
+    )
+
+
+def build_member_welcome_message(member_name, chat_title):
+    safe_name = escape_markdown_text(member_name or "Friend")
+    safe_title = escape_markdown_text(chat_title or "group")
+    return (
+        f"🎉 Welcome *{safe_name}* to *{safe_title}*\\! 🌸\n"
+        "💖 Pyaar se raho, maze karo aur achchhi vibes spread karo.\n"
+        "🤍 Aira yahin hai agar help chahiye ho."
+    )
+
+
+def build_owner_return_message(owner_name):
+    safe_name = escape_markdown_text(owner_name or "Owner")
+    return (
+        f"👑 Welcome back *{safe_name}*\\! 💫\n"
+        "💖 Kaafi der baad aap aaye ho, group aur Aira dono khush hain.\n"
+        "🌷 Main yahin hun, kuchh chahiye ho to bata do."
+    )
+
+
+def build_owner_changed_message(chat_title, previous_owner_name, new_owner_name):
+    safe_title = escape_markdown_text(chat_title or "group")
+    safe_new = escape_markdown_text(new_owner_name or "Owner")
+    safe_old = escape_markdown_text(previous_owner_name or "Previous Owner")
+    return (
+        f"👑 Owner update in *{safe_title}*\\! 💞\n"
+        f"🌸 Welcome *{safe_new}*.\n"
+        f"🤍 Previous owner: *{safe_old}*.\n"
+        "✨ Aira aapka warmly welcome karti hai."
+    )
+
+
+def build_daily_greeting_message(greeting_key):
+    messages = {
+        "good_morning": (
+            "☀️ Good morning sabko 💖\n"
+            "Aaj ka din sweet, peaceful aur lucky rahe.\n"
+            "🌸 Main Aira yahin hun, jab bhi baat karni ho bula lena."
+        ),
+        "good_afternoon": (
+            "🌤 Good afternoon cuties 💗\n"
+            "Lunch ke baad bhi energy soft aur bright bani rahe.\n"
+            "✨ Agar help chahiye ho to Aira ready hai."
+        ),
+        "good_evening": (
+            "🌆 Good evening everyone 💞\n"
+            "Shaam pyari ho, mood halka ho aur vibes cozy rahen.\n"
+            "🌷 Aira ke saath aaram se baat kar sakte ho."
+        ),
+        "good_night": (
+            "🌙 Good night sweet people 🤍\n"
+            "Aaj ki thakan halka sa chhod do aur chain se rest karo.\n"
+            "💫 Kal phir milte hain, Aira yahin rahegi."
+        ),
+    }
+    return messages.get(greeting_key, "")
+
+
+def record_bot_added_event(chat, actor, welcome_message=None):
+    chat_id = chat.get("id")
+    if chat_id is None:
+        return
+    chat_title = str(chat.get("title") or chat.get("first_name") or chat_id)
+    actor_id = coerce_int((actor or {}).get("id"), None)
+    actor_name = get_actor_display_name(actor)
+    upsert_group_audit_entry(
+        chat_id,
+        {
+            "title": chat_title,
+            "status": "active",
+            "added_by_id": actor_id,
+            "added_by_name": actor_name,
+            "added_at": int(time.time()),
+            "removed_by_id": 0,
+            "removed_by_name": "",
+            "removed_at": 0,
+            "welcome_message": welcome_message or build_bot_added_message(chat_title, actor_name),
+        },
+    )
+
+
+def record_bot_promoted_event(chat, actor):
+    chat_id = chat.get("id")
+    if chat_id is None:
+        return
+    actor_id = coerce_int((actor or {}).get("id"), None)
+    actor_name = get_actor_display_name(actor)
+    upsert_group_audit_entry(
+        chat_id,
+        {
+            "promoted_by_id": actor_id,
+            "promoted_by_name": actor_name,
+            "promoted_at": int(time.time()),
+        },
+    )
+
+
+def record_bot_removed_event(chat, actor):
+    chat_id = chat.get("id")
+    if chat_id is None:
+        return
+    existing = get_group_audit_entry(chat_id)
+    chat_title = str(chat.get("title") or existing.get("title") or chat.get("first_name") or chat_id)
+    actor_id = coerce_int((actor or {}).get("id"), None)
+    actor_name = get_actor_display_name(actor)
+    upsert_group_audit_entry(
+        chat_id,
+        {
+            "title": chat_title,
+            "status": "removed",
+            "removed_by_id": actor_id,
+            "removed_by_name": actor_name,
+            "removed_at": int(time.time()),
+        },
+    )
+    remove_group_from_active_store(chat_id)
+
+
+def has_global_group_admin_access(user_id):
+    user_id_int = coerce_int(user_id, 0)
+    if not user_id_int:
+        return False
+    if user_id_int in {OWNER_ID, DEVELOPER_COMMAND_USER_ID}:
+        return True
+    groups = normalize_group_store(load_json_file(GROUPS_FILE, {}))
+    for snapshot in groups.values():
+        if user_id_int == coerce_int(snapshot.get("owner_id"), 0):
+            return True
+        if user_id_int in {coerce_int(admin_id, 0) for admin_id in snapshot.get("admin_ids", [])}:
+            return True
+    return False
+
+
+def format_unix_timestamp(ts):
+    if not ts:
+        return "Not recorded"
+    return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(ts)))
+
+
+def split_markdown_pages(paragraphs, limit=3500):
+    pages = []
+    current = ""
+    for paragraph in paragraphs:
+        piece = paragraph if not current else f"{current}\n\n{paragraph}"
+        if len(piece) <= limit:
+            current = piece
+            continue
+        if current:
+            pages.append(current)
+        if len(paragraph) <= limit:
+            current = paragraph
+            continue
+        lines = paragraph.split("\n")
+        chunk = ""
+        for line in lines:
+            tentative = line if not chunk else f"{chunk}\n{line}"
+            if len(tentative) <= limit:
+                chunk = tentative
+            else:
+                if chunk:
+                    pages.append(chunk)
+                chunk = line
+        current = chunk
+    if current:
+        pages.append(current)
+    return pages
+
+
+def send_markdown_pages(chat_id, paragraphs):
+    for page in split_markdown_pages(paragraphs):
+        send_message(chat_id, page)
+
+
+def maybe_send_owner_return_welcome(chat, user):
+    chat_id = chat.get("id")
+    user_id = (user or {}).get("id")
+    if chat_id is None or user_id in (None, 0):
+        return
+    if not is_owner(chat_id, user_id):
+        return
+    last_seen, _ = note_user_presence(chat_id, user_id)
+    if not last_seen:
+        return
+    if int(time.time()) - last_seen < OWNER_RETURN_WELCOME_SECONDS:
+        return
+    send_message(chat_id, build_owner_return_message(get_user_display_name(user)))
+
+
+def maybe_send_daily_greetings():
+    now = time.localtime()
+    date_key = time.strftime("%Y-%m-%d", now)
+    for greeting_key, schedule in DAILY_GREETING_SCHEDULE.items():
+        if now.tm_hour != schedule["hour"] or now.tm_min != schedule["minute"]:
+            continue
+        groups = normalize_group_store(load_json_file(GROUPS_FILE, {}))
+        for snapshot in groups.values():
+            chat_id = snapshot.get("chat_id")
+            if chat_id is None or is_group_muted(chat_id):
+                continue
+            activity_entry = get_group_activity_entry(chat_id)
+            if activity_entry.get("daily_greetings", {}).get(greeting_key) == date_key:
+                continue
+            greeting_text = build_daily_greeting_message(greeting_key)
+            if greeting_text:
+                send_message(chat_id, greeting_text)
+                mark_daily_greeting_sent(chat_id, greeting_key, date_key)
+
+
+def scheduled_greeting_loop():
+    while True:
+        try:
+            maybe_send_daily_greetings()
+        except Exception as e:
+            print(f"Scheduled greeting error: {e}", flush=True)
+        time.sleep(SCHEDULED_GREETING_LOOP_SECONDS)
+
+
+def build_all_group_view_paragraphs():
+    groups = normalize_group_store(load_json_file(GROUPS_FILE, {}))
+    audit_store = get_group_audit_store()
+    active_entries = []
+    removed_entries = []
+
+    known_chat_ids = sorted(
+        {str(chat_id) for chat_id in groups.keys()} | {str(chat_id) for chat_id in audit_store.keys()},
+        key=lambda value: coerce_int(value, 0),
+    )
+
+    for chat_id in known_chat_ids:
+        active_snapshot = groups.get(str(chat_id))
+        audit_entry = audit_store.get(str(chat_id), {})
+        if active_snapshot:
+            merged = dict(audit_entry)
+            merged.update(active_snapshot)
+            merged["status"] = "active"
+            merged["chat_id"] = active_snapshot.get("chat_id", coerce_int(chat_id, 0))
+            merged["welcome_message"] = audit_entry.get("welcome_message", "")
+            merged["added_by_id"] = audit_entry.get("added_by_id")
+            merged["added_by_name"] = audit_entry.get("added_by_name", "")
+            merged["added_at"] = audit_entry.get("added_at", 0)
+            merged["promoted_by_id"] = audit_entry.get("promoted_by_id")
+            merged["promoted_by_name"] = audit_entry.get("promoted_by_name", "")
+            merged["promoted_at"] = audit_entry.get("promoted_at", 0)
+            merged["removed_by_id"] = audit_entry.get("removed_by_id")
+            merged["removed_by_name"] = audit_entry.get("removed_by_name", "")
+            merged["removed_at"] = audit_entry.get("removed_at", 0)
+            active_entries.append(merged)
+        elif audit_entry:
+            removed_entries.append(audit_entry)
+
+    total_members = sum(max(0, coerce_int(entry.get("members"), 0)) for entry in active_entries)
+    paragraphs = [
+        (
+            "🌍 **Aira Global Group View**\n"
+            f"🟢 Active Groups: `{len(active_entries)}`\n"
+            f"💔 Removed Groups: `{len(removed_entries)}`\n"
+            f"👥 Total Members Across Active Groups: `{total_members}`"
+        )
+    ]
+
+    if not active_entries and not removed_entries:
+        paragraphs.append("⚠️ No group audit data is available yet.")
+        return paragraphs
+
+    if active_entries:
+        active_entries.sort(key=lambda row: (str(row.get("title") or "").lower(), row.get("chat_id") or 0))
+        for index, entry in enumerate(active_entries, start=1):
+            admin_names = ", ".join(entry.get("admins", [])) or "No admins found"
+            actor_name = entry.get("added_by_name") or "Not recorded"
+            actor_id = entry.get("added_by_id")
+            actor_line = escape_markdown_text(actor_name)
+            if actor_id:
+                actor_line += f" \\(`{actor_id}`\\)"
+            promoter_name = entry.get("promoted_by_name") or "Not recorded"
+            promoter_id = entry.get("promoted_by_id")
+            promoter_line = escape_markdown_text(promoter_name)
+            if promoter_id:
+                promoter_line += f" \\(`{promoter_id}`\\)"
+            paragraphs.append(
+                "\n".join(
+                    [
+                        f"🟢 **Active Group {index}**",
+                        f"📛 Group: {escape_markdown_text(str(entry.get('title') or entry.get('chat_id')))}",
+                        f"🆔 Chat ID: `{entry.get('chat_id')}`",
+                        f"👑 Owner: {escape_markdown_text(str(entry.get('owner') or 'Owner'))}",
+                        f"🛡 Admin Count: `{len(entry.get('admin_ids', []))}`",
+                        f"🧑‍✈️ Admins: {escape_markdown_text(admin_names)}",
+                        f"👥 Members: `{max(0, coerce_int(entry.get('members'), 0))}`",
+                        f"➕ Added By: {actor_line}",
+                        f"🛡 Bot Admin By: {promoter_line}",
+                        f"🕒 Added At: {escape_markdown_text(format_unix_timestamp(entry.get('added_at')))}",
+                        f"🕒 Bot Admin At: {escape_markdown_text(format_unix_timestamp(entry.get('promoted_at')))}",
+                        f"💌 Welcome Msg: {escape_markdown_text(entry.get('welcome_message') or 'Not recorded')}",
+                        f"🔄 Last Sync: {escape_markdown_text(format_unix_timestamp(entry.get('updated_at')))}",
+                    ]
+                )
+            )
+
+    if removed_entries:
+        removed_entries.sort(key=lambda row: row.get("removed_at") or 0, reverse=True)
+        for index, entry in enumerate(removed_entries, start=1):
+            remover_name = entry.get("removed_by_name") or "Not recorded"
+            remover_id = entry.get("removed_by_id")
+            remover_line = escape_markdown_text(remover_name)
+            if remover_id:
+                remover_line += f" \\(`{remover_id}`\\)"
+            admin_names = ", ".join(entry.get("admins", [])) or "No admins saved"
+            paragraphs.append(
+                "\n".join(
+                    [
+                        f"💔 **Removed Group {index}**",
+                        f"📛 Group: {escape_markdown_text(str(entry.get('title') or entry.get('chat_id')))}",
+                        f"🆔 Chat ID: `{entry.get('chat_id')}`",
+                        f"👑 Last Owner: {escape_markdown_text(str(entry.get('owner') or 'Owner'))}",
+                        f"🛡 Last Admins: {escape_markdown_text(admin_names)}",
+                        f"👥 Last Member Count: `{max(0, coerce_int(entry.get('members'), 0))}`",
+                        f"➕ Added By: {escape_markdown_text(entry.get('added_by_name') or 'Not recorded')}",
+                        f"💔 Removed By: {remover_line}",
+                        f"🕒 Removed At: {escape_markdown_text(format_unix_timestamp(entry.get('removed_at')))}",
+                    ]
+                )
+            )
+
+    return paragraphs
+
+
 def track_message(chat_id, message_id, user_id, kind, has_link=False):
     if not message_id:
         return
@@ -644,18 +1617,74 @@ def telegram_api_json(method, api_method, *, params=None, payload=None, timeout=
     raise last_error
 
 
-def send_message(chat_id, text, reply_markup=None, track_kind="bot_text"):
+def extract_interaction_media_url(provider_name, data):
+    if provider_name == "nekosbest":
+        results = data.get("results") or []
+        if results:
+            return str(results[0].get("url") or "").strip()
+        return ""
+    return str(data.get("url") or "").strip()
+
+
+def fetch_interaction_media_url(command_name):
+    spec = INTERACTION_COMMAND_SPECS.get(command_name)
+    if not spec:
+        return None
+
+    for endpoint in spec.get("media_candidates", []):
+        for provider_name, provider in INTERACTION_MEDIA_PROVIDERS.items():
+            if endpoint not in provider.get("supported", set()):
+                continue
+            try:
+                response = HTTP.get(provider["url"].format(endpoint=endpoint), timeout=12)
+                if response.status_code != 200:
+                    continue
+                media_url = extract_interaction_media_url(provider_name, response.json())
+                if media_url:
+                    return media_url
+            except Exception:
+                continue
+    return None
+
+
+def send_message(chat_id, text, reply_markup=None, track_kind="bot_text", reply_to_message_id=None):
     payload = {"chat_id": chat_id, "text": text, "parse_mode": "Markdown"}
     if reply_markup:
         payload["reply_markup"] = reply_markup
+    if reply_to_message_id:
+        payload["reply_to_message_id"] = reply_to_message_id
     try:
         data = telegram_api_json("POST", "sendMessage", payload=payload, timeout=10)
-        message_id = data.get("result", {}).get("message_id")
+        result_message = data.get("result", {}) or {}
+        message_id = result_message.get("message_id")
         if data.get("ok") and message_id:
             track_message(chat_id, message_id, 0, track_kind)
+            record_message_audit_entry(result_message)
         return data
     except Exception as e:
         print(f"Send Error: {e}")
+        return {}
+
+
+def send_animation_message(chat_id, animation_url, caption, reply_to_message_id=None, track_kind="bot_animation"):
+    payload = {
+        "chat_id": chat_id,
+        "animation": animation_url,
+        "caption": caption,
+        "parse_mode": "Markdown",
+    }
+    if reply_to_message_id:
+        payload["reply_to_message_id"] = reply_to_message_id
+    try:
+        data = telegram_api_json("POST", "sendAnimation", payload=payload, timeout=20)
+        result_message = data.get("result", {}) or {}
+        message_id = result_message.get("message_id")
+        if data.get("ok") and message_id:
+            track_message(chat_id, message_id, 0, track_kind)
+            record_message_audit_entry(result_message)
+        return data
+    except Exception as e:
+        print(f"Animation Send Error: {e}")
         return {}
 
 
@@ -893,15 +1922,77 @@ def handle_new_chat_members(msg):
     handled = False
     for member in new_members:
         if member.get("id") == BOT_ID:
+            existing = get_group_audit_entry(chat_id)
+            recently_tracked = (
+                existing.get("status") == "active"
+                and (int(time.time()) - coerce_int(existing.get("added_at"), 0)) < 60
+            )
+            if not recently_tracked:
+                actor = msg.get("from", {}) or {}
+                welcome_message = build_bot_added_message(
+                    str(chat.get("title") or chat.get("first_name") or chat_id),
+                    get_actor_display_name(actor),
+                )
+                record_bot_added_event(chat, actor, welcome_message=welcome_message)
+                send_message(chat_id, welcome_message)
             continue
         display_name = get_user_display_name(member) or "Friend"
         send_message(
             chat_id,
-            build_start_text(display_name),
-            reply_markup=get_start_panel_keyboard(),
+            build_member_welcome_message(display_name, str(chat.get("title") or chat_id)),
         )
         handled = True
     return handled
+
+
+def process_my_chat_member(update):
+    chat = update.get("chat", {})
+    chat_id = chat.get("id")
+    chat_type = chat.get("type")
+    if chat_id is None or chat_type not in {"group", "supergroup"}:
+        return
+
+    old_status = str((update.get("old_chat_member") or {}).get("status") or "").lower()
+    new_status = str((update.get("new_chat_member") or {}).get("status") or "").lower()
+    actor = update.get("from", {}) or {}
+
+    if old_status in {"left", "kicked"} and new_status in {"member", "administrator"}:
+        welcome_message = build_bot_added_message(
+            str(chat.get("title") or chat.get("first_name") or chat_id),
+            get_actor_display_name(actor),
+        )
+        record_bot_added_event(chat, actor, welcome_message=welcome_message)
+        snapshot = sync_admin_state(chat_id, force=True)
+        if snapshot:
+            update_group_audit_from_snapshot(snapshot)
+        send_message(chat_id, welcome_message)
+        return
+
+    if old_status == "member" and new_status == "administrator":
+        record_bot_promoted_event(chat, actor)
+        snapshot = sync_admin_state(chat_id, force=True)
+        if snapshot:
+            update_group_audit_from_snapshot(snapshot)
+        send_message(
+            chat_id,
+            build_bot_promoted_message(
+                str(chat.get("title") or chat.get("first_name") or chat_id),
+                get_actor_display_name(actor),
+            ),
+        )
+        return
+
+    if new_status in {"left", "kicked"} and old_status not in {"left", "kicked"}:
+        snapshot = get_group_snapshot(chat_id, force=False)
+        if snapshot:
+            update_group_audit_from_snapshot(snapshot)
+        record_bot_removed_event(chat, actor)
+        return
+
+    if new_status in {"member", "administrator"}:
+        snapshot = sync_admin_state(chat_id, force=True)
+        if snapshot:
+            update_group_audit_from_snapshot(snapshot)
 
 
 def translate_text_with_google(text, lang_code):
@@ -1081,11 +2172,12 @@ def sync_admin_state(chat_id, force=False):
     now = time.time()
     cached = ADMIN_CACHE.get(chat_id)
     if cached and not force and now - cached["ts"] < ADMIN_CACHE_TTL_SECONDS:
-        return cached["data"]
+        return apply_owner_override_to_snapshot(chat_id, cached["data"])
 
+    previous_audit = get_group_audit_entry(chat_id)
     admins = get_admin_members(chat_id)
     if not admins:
-        return cached["data"] if cached else None
+        return apply_owner_override_to_snapshot(chat_id, cached["data"]) if cached else None
 
     owner_id = None
     owner_name = "Owner"
@@ -1136,7 +2228,28 @@ def sync_admin_state(chat_id, force=False):
         item_store[str(chat_id)] = filtered_items
         save_json_file(ITEMS_FILE, item_store)
 
-    return snapshot
+    effective_snapshot = apply_owner_override_to_snapshot(chat_id, snapshot)
+    previous_owner_id = coerce_int(previous_audit.get("owner_id"), None)
+    current_owner_id = coerce_int(effective_snapshot.get("owner_id"), None)
+    owner_changed = (
+        previous_audit
+        and previous_audit.get("status") == "active"
+        and previous_owner_id is not None
+        and current_owner_id is not None
+        and previous_owner_id != current_owner_id
+    )
+    previous_owner_name = str(previous_audit.get("owner") or "Owner")
+    update_group_audit_from_snapshot(effective_snapshot)
+    if owner_changed:
+        send_message(
+            chat_id,
+            build_owner_changed_message(
+                str(effective_snapshot.get("title") or chat_id),
+                previous_owner_name,
+                str(effective_snapshot.get("owner") or "Owner"),
+            ),
+        )
+    return effective_snapshot
 
 
 def get_group_snapshot(chat_id, force=False):
@@ -1144,7 +2257,7 @@ def get_group_snapshot(chat_id, force=False):
     if snapshot:
         return snapshot
     groups = normalize_group_store(load_json_file(GROUPS_FILE, {}))
-    return groups.get(str(chat_id), {})
+    return apply_owner_override_to_snapshot(chat_id, groups.get(str(chat_id), {}))
 
 
 def is_owner(chat_id, user_id):
@@ -1280,7 +2393,8 @@ def get_all_groups_summary():
     if not groups:
         return "No groups saved yet."
     lines = []
-    for info in groups.values():
+    for raw_info in groups.values():
+        info = apply_owner_override_to_snapshot(raw_info.get("chat_id"), raw_info)
         lines.append(
             f"{info.get('title', 'Group')}\n"
             f"ID: `{info.get('chat_id')}`\n"
@@ -1649,37 +2763,27 @@ def get_stats_text():
 
 def get_show_commands_text():
     return (
-        "Available Features:\n"
-        "AI Chat\n"
-        "Block\n"
-        "Unblock\n"
-        "Mute\n"
-        "Unmute\n"
-        "Ban\n"
-        "Pin\n"
-        "Unpin\n"
-        "Items\n"
-        "ID\n"
-        "Translate\n"
-        "Purge\n"
-        "Single Delete\n"
-        "Title\n"
-        "Show\n"
-        "Group\n"
-        "Stats\n"
-        "Update\n"
-        "Broadcast\n"
-        "Full Clear\n\n"
+        "Main Features:\n"
+        "/start /help /about_ai /lan /reset /show\n"
+        "/block /unblock /mute /unmute /ban /pin /unpin\n"
+        "/title /setowne /translate /purge /sdelete\n"
+        "/items /group /stats /update /broadcast /full_clear /restart /delete\n\n"
+        "Interaction Command Pack:\n"
+        f"{get_interaction_commands_text()}\n\n"
         "Usage Examples:\n"
-        "/reset chat\n"
-        "/reset messages\n"
+        "Reply + /hug\n"
+        "/goodnight\n"
+        "Reply + /propose\n"
+        "Reply + /setowne\n"
+        "/setowne reset\n"
+        "/allgroup  (owner-only)\n"
         "/reset all\n"
-        "/update\n"
         "/purge 50\n"
-        "/purge links\n"
-        "Reply + /purge after\n"
-        "Reply + /sdelete\n"
-        "Reply + /translate"
+        "Reply + /translate\n\n"
+        "Tip:\n"
+        "Aira ke interaction output par reply karke baat karoge to bot same vibe pakad legi.\n\n"
+        "Telegram Note:\n"
+        "Default slash menu me full interaction pack dikhega. Extra owner/admin commands private owner chat menu me visible rahenge."
     )
 
 
@@ -1950,9 +3054,32 @@ def extract_reply_prompt(msg):
     new_text = (msg.get("text") or "").strip()
     if not new_text:
         return None
-    if old_text:
-        return f"Previous Aira message:\n{old_text}\n\nUser reply:\n{new_text}"
-    return new_text
+    chat_id = msg.get("chat", {}).get("id")
+    interaction_context = get_interaction_context(chat_id, reply_to.get("message_id"))
+
+    parts = []
+    if interaction_context:
+        summary = interaction_context.get("summary") or ""
+        command_display = interaction_context.get("command_display") or interaction_context.get("command") or "interaction"
+        emoji = interaction_context.get("emoji") or ""
+        caption_text = interaction_context.get("caption_text") or old_text
+        parts.append(
+            "\n".join(
+                [
+                    "Previous Aira interaction:",
+                    f"Command: {command_display}",
+                    f"Emoji: {emoji}",
+                    f"Summary: {summary}",
+                    f"Caption: {caption_text}",
+                    "Reply in a matching playful vibe when it fits the user's message.",
+                ]
+            )
+        )
+    elif old_text:
+        parts.append(f"Previous Aira message:\n{old_text}")
+
+    parts.append(f"User reply:\n{new_text}")
+    return "\n\n".join(part for part in parts if part)
 
 
 # --- COMMAND OPERATIONS ---
@@ -1976,6 +3103,7 @@ def clear_tracked_messages(chat_id, keep_message_id=None):
             remaining.append(item)
     user_data["tracked_messages"] = remaining
     user_data["history"] = []
+    user_data["interaction_contexts"] = []
     save_user_data(chat_id, user_data)
     return deleted
 
@@ -1983,6 +3111,7 @@ def clear_tracked_messages(chat_id, keep_message_id=None):
 def clear_chat_history_only(chat_id):
     user_data = load_user_data(chat_id)
     user_data["history"] = []
+    user_data["interaction_contexts"] = []
     save_user_data(chat_id, user_data)
 
 
@@ -2004,6 +3133,7 @@ def clear_tracked_messages_only(chat_id, keep_message_id=None):
         else:
             remaining.append(item)
     user_data["tracked_messages"] = remaining
+    user_data["interaction_contexts"] = []
     save_user_data(chat_id, user_data)
     return deleted
 
@@ -2137,6 +3267,125 @@ def format_user_link_markdown(user):
     return safe_label
 
 
+def render_interaction_action_text(action_text, target_label):
+    rendered = str(action_text or "").strip()
+    if target_label:
+        if "{target}" in rendered:
+            rendered = rendered.format(target=target_label)
+        else:
+            rendered = f"{target_label} {rendered}"
+    return re.sub(r"\s{2,}", " ", rendered).strip()
+
+
+def build_interaction_caption(command_name, actor_user, target_user=None, markdown=False):
+    spec = INTERACTION_COMMAND_SPECS[command_name]
+    actor_label = format_user_link_markdown(actor_user) if markdown else (get_user_display_name(actor_user or {}) or "User")
+    target_label = ""
+    if target_user:
+        target_label = format_user_link_markdown(target_user) if markdown else (get_user_display_name(target_user or {}) or "User")
+
+    header = f"{spec['emoji']} *{spec['display']}*" if markdown else f"{spec['emoji']} {spec['display']}"
+    if target_label:
+        body = f"{actor_label} {render_interaction_action_text(spec['target_action'], target_label)} {spec['emoji']}"
+    else:
+        body = f"{actor_label} {spec['solo_action']} {spec['emoji']}"
+    return f"{header}\n{body}"
+
+
+def is_aira_user(user):
+    return int((user or {}).get("id") or 0) == BOT_ID
+
+
+def build_aira_flingkiss_caption(actor_user, markdown=False):
+    actor_label = format_user_link_markdown(actor_user) if markdown else (get_user_display_name(actor_user or {}) or "User")
+    header = "💋 *Fling Kiss*" if markdown else "💋 Fling Kiss"
+    lines = [
+        header,
+        f"{actor_label} ne Aira ki taraf flying kiss bheja 💋",
+        f"🫣 *Aira:* Aww {actor_label}, itna sweet fling kiss... main sach me thodi si sharma gayi 🫧🌸"
+        if markdown else
+        f"🫣 Aira: Aww {actor_label}, itna sweet fling kiss... main sach me thodi si sharma gayi 🫧🌸",
+        "🫠 Dil halka sa melt ho gaya... aur cheeks pink ho gayi 💗",
+    ]
+    return "\n".join(lines)
+
+
+def build_aira_flingkiss_summary(actor_name):
+    safe_actor = actor_name or "User"
+    return f"{safe_actor} sent Aira a fling kiss, and Aira replied with a shy blushing reaction."
+
+
+def send_interaction_command_response(msg, command_name):
+    spec = INTERACTION_COMMAND_SPECS.get(command_name)
+    if not spec:
+        return False
+
+    chat = msg.get("chat", {})
+    chat_id = chat.get("id")
+    actor_user = msg.get("from", {}) or {}
+    reply_to = msg.get("reply_to_message") or {}
+    target_user = reply_to.get("from") if reply_to else None
+    target_user_id = (target_user or {}).get("id")
+    actor_user_id = actor_user.get("id")
+    if target_user_id and actor_user_id and int(target_user_id) == int(actor_user_id):
+        target_user = None
+
+    is_aira_flingkiss = command_name == "flingkiss" and is_aira_user(target_user)
+    if is_aira_flingkiss:
+        caption_markdown = build_aira_flingkiss_caption(actor_user, markdown=True)
+        caption_plain = build_aira_flingkiss_caption(actor_user, markdown=False)
+        media_url = fetch_interaction_media_url("blush") or fetch_interaction_media_url("kiss")
+        interaction_summary = build_aira_flingkiss_summary(get_user_display_name(actor_user or {}) or "User")
+        target_name = "Aira"
+        target_user_id = BOT_ID
+    else:
+        caption_markdown = build_interaction_caption(command_name, actor_user, target_user=target_user, markdown=True)
+        caption_plain = build_interaction_caption(command_name, actor_user, target_user=target_user, markdown=False)
+        media_url = fetch_interaction_media_url(command_name)
+        interaction_summary = build_interaction_context_summary(
+            command_name,
+            get_user_display_name(actor_user or {}) or "User",
+            get_user_display_name(target_user or {}) if target_user else "",
+        )
+        target_name = get_user_display_name(target_user or {}) if target_user else ""
+
+    if media_url:
+        data = send_animation_message(
+            chat_id,
+            media_url,
+            caption_markdown,
+            reply_to_message_id=msg.get("message_id"),
+            track_kind="bot_interaction",
+        )
+    else:
+        data = send_message(
+            chat_id,
+            caption_markdown,
+            reply_to_message_id=msg.get("message_id"),
+            track_kind="bot_interaction",
+        )
+
+    message_id = data.get("result", {}).get("message_id")
+    if data.get("ok") and message_id:
+        save_interaction_context(
+            chat_id,
+            {
+                "message_id": message_id,
+                "command": command_name,
+                "command_display": spec["display"],
+                "emoji": spec["emoji"],
+                "actor_id": actor_user_id or 0,
+                "actor_name": get_user_display_name(actor_user or {}) or "User",
+                "target_id": target_user_id or 0,
+                "target_name": target_name,
+                "caption_text": caption_plain,
+                "summary": interaction_summary,
+                "created_at": int(time.time()),
+            },
+        )
+    return bool(data.get("ok"))
+
+
 def request_restart():
     global RESTART_REQUESTED
     RESTART_REQUESTED = True
@@ -2203,7 +3452,7 @@ def process_callback_query(cb):
         edit_message(
             chat_id,
             msg_id,
-            "🛡 **Admin Panel**\n\n`/block`\n`/unblock`\n`/mute`\n`/unmute`\n`/ban`\n`/pin`\n`/unpin`\n`/title`\n`/clear_chat`\n`/purge`\n`/sdelete`\n`/translate`",
+            "🛡 **Admin Panel**\n\n`/block`\n`/unblock`\n`/mute`\n`/unmute`\n`/ban`\n`/pin`\n`/unpin`\n`/title`\n`/setowne`\n`/clear_chat`\n`/purge`\n`/sdelete`\n`/translate`\n`/restart`",
             reply_markup=get_start_panel_keyboard(),
         )
         answer_callback(callback_id, "Admin panel opened.")
@@ -2291,6 +3540,12 @@ def process_message(msg):
     text = msg.get("text", "")
     copied_text = ((msg.get("text") or "") + " " + (msg.get("caption") or "")).strip()
 
+    if msg.get("message_id"):
+        try:
+            record_message_audit_entry(msg)
+        except Exception:
+            pass
+
 
 
 
@@ -2317,6 +3572,9 @@ def process_message(msg):
     if handle_new_chat_members(msg):
         return
 
+    if chat_type in {"group", "supergroup"} and from_user and not from_user.get("is_bot"):
+        maybe_send_owner_return_welcome(chat, from_user)
+
     if user_id and is_temp_blocked(chat_id, user_id) and not actor_has_admin_access:
         delete_message(chat_id, msg["message_id"])
         return
@@ -2334,6 +3592,10 @@ def process_message(msg):
     kind = "text" if copied_text else "media"
     track_message(chat_id, msg.get("message_id"), user_id, kind, has_link=contains_link(msg))
     track_item_stats(chat_id, from_user, msg)
+
+    if command and command.startswith("/") and command[1:] in INTERACTION_COMMAND_SPECS:
+        send_interaction_command_response(msg, command[1:])
+        return
 
     if command == "/start":
         start_name = get_start_display_name(msg)
@@ -2400,11 +3662,21 @@ def process_message(msg):
             "`/reset chat` = AI memory clear\n"
             "`/reset messages` = tracked messages delete\n"
             "`/reset all` = memory + tracked messages clear\n"
+            "Reply + `/setowne` = static owner set shortcut\n"
+            "`/setowne reset` = static owner clear shortcut\n"
+            "`/allgroup` = owner-only all groups audit view\n"
+            "`/setOwner` aur `/allGroupView` bhi kaam karte hain\n"
+            "`/restart` = owner-only full program restart\n"
             "`/purge 50` = last 50 messages delete\n"
             "`/purge links` = tracked link messages delete\n"
             "Reply + `/purge after` = us message ke baad wale tracked messages delete\n"
             "Reply + `/sdelete` = ek message delete\n"
-            "Reply + `/translate` = Hindi translation"
+            "Reply + `/translate` = Hindi translation\n"
+            "Reply + `/hug` = interaction gif with tag\n"
+            "Reply + `/flingkiss` = special shy Aira reply\n"
+            "`/goodnight` = daily style gif command\n"
+            "`/show` = full 81 command pack\n"
+            "_Extra owner/admin slash commands private owner chat me visible rahenge\\._"
         )
         live_admin_help = get_live_admin_help_text(chat_id) if chat_type in {"group", "supergroup"} else ""
         if live_admin_help:
@@ -2479,6 +3751,13 @@ def process_message(msg):
             send_message(chat_id, "Only owner can use /group.")
             return
         send_message(chat_id, get_group_summary_text(chat_id) if chat_type in {"group", "supergroup"} else get_all_groups_summary())
+        return
+
+    if command in {"/allgroupview", "/allgroup"}:
+        if coerce_int(user_id, 0) not in {OWNER_ID, DEVELOPER_COMMAND_USER_ID}:
+            send_message(chat_id, "Only owner can use /allgroup.")
+            return
+        send_markdown_pages(chat_id, build_all_group_view_paragraphs())
         return
 
     if command == "/items":
@@ -2563,6 +3842,54 @@ def process_message(msg):
             t.join()
 
         send_message(chat_id, f"🚀 Broadcast sent to {delivered} chats.")
+
+    if command in {"/setowner", "/setowne"}:
+        reply_to = msg.get("reply_to_message")
+        set_owner_arg = get_command_argument(text).strip().lower()
+        developer_can_set_owner = is_set_owner_developer(user_id)
+        current_static_owner_can_reset = is_current_static_owner(chat_id, user_id)
+
+        if chat_type not in {"group", "supergroup"}:
+            send_message(chat_id, "Use /setowne only in a group.")
+            return
+
+        if set_owner_arg == "reset":
+            if reply_to and not developer_can_set_owner:
+                send_message(chat_id, "Only developer can use this command.")
+                return
+            if reply_to:
+                send_message(chat_id, "Use `/setowne reset` without replying to any message.")
+                return
+            if not (developer_can_set_owner or current_static_owner_can_reset):
+                send_message(chat_id, "Only developer or current static owner can use /setowne reset.")
+                return
+            if not clear_owner_override(chat_id):
+                send_message(chat_id, "No static owner is set for this group.")
+                return
+            snapshot = get_group_snapshot(chat_id, force=True)
+            owner_name = escape_markdown_text(str(snapshot.get("owner") or "Owner"))
+            send_message(chat_id, f"Static owner reset complete.\nCurrent owner: {owner_name}")
+            return
+
+        if not developer_can_set_owner:
+            send_message(chat_id, "Only developer can use this command.")
+            return
+        if not reply_to:
+            send_message(chat_id, "Reply to a user's message with `/setowne` or use `/setowne reset`.")
+            return
+
+        target_user = reply_to.get("from", {})
+        target_user_id = target_user.get("id")
+        if not target_user_id or target_user.get("is_bot"):
+            send_message(chat_id, "Reply to a real user's message.")
+            return
+
+        target_owner_name = get_user_display_name(target_user) or "Owner"
+        set_owner_override(chat_id, target_user_id, target_owner_name, user_id)
+        snapshot = get_group_snapshot(chat_id, force=True)
+        owner_name = escape_markdown_text(str(snapshot.get("owner") or target_owner_name))
+        send_message(chat_id, f"Static owner set to {owner_name}.\nOwner ID: `{target_user_id}`")
+        return
 
     if command == "/title":
         print(
@@ -2829,6 +4156,8 @@ def process_message(msg):
 def process_update(update):
     if "callback_query" in update:
         process_callback_query(update["callback_query"])
+    elif "my_chat_member" in update:
+        process_my_chat_member(update["my_chat_member"])
     elif "message" in update:
         process_message(update["message"])
 
@@ -2843,6 +4172,13 @@ def cleanup_loop():
                 path = os.path.join(HISTORY_DIR, file_name)
                 if os.path.isfile(path) and (now - os.path.getmtime(path) > AUTO_DELETE_SECONDS):
                     os.remove(path)
+            for root, _, files in os.walk(MESSAGE_AUDIT_DIR, topdown=False):
+                for file_name in files:
+                    path = os.path.join(root, file_name)
+                    if os.path.isfile(path) and (now - os.path.getmtime(path) > MESSAGE_AUDIT_RETENTION_SECONDS):
+                        os.remove(path)
+                if root != MESSAGE_AUDIT_DIR and os.path.isdir(root) and not os.listdir(root):
+                    os.rmdir(root)
         except Exception:
             pass
         time.sleep(3600)
@@ -2859,38 +4195,129 @@ def json_self_update_loop():
         time.sleep(JSON_SELF_UPDATE_INTERVAL_SECONDS)
 
 
+def build_command_objects(command_names):
+    descriptions = {
+        "start": "Open menu",
+        "lan": "Change language",
+        "help": "Get help",
+        "about_ai": "About Aira",
+        "reset": "chat/messages/all",
+        "clear_chat": "Clear chat",
+        "block": "Block user",
+        "unblock": "Unblock user",
+        "mute": "Mute user/group",
+        "unmute": "Unmute user/group",
+        "ban": "Ban user",
+        "pin": "Pin message",
+        "unpin": "Unpin messages",
+        "title": "Set admin title",
+        "setowner": "reply/reset",
+        "setowne": "shortcut setowner",
+        "allgroupview": "global group view",
+        "allgroup": "shortcut group view",
+        "id": "Show ids",
+        "translate": "Reply/text to Hindi",
+        "purge": "count/links/after",
+        "sdelete": "Delete one message",
+        "show": "Full command pack",
+        "items": "Show upload stats",
+        "group": "Show group data",
+        "stats": "Bot stats",
+        "update": "Refresh bot json",
+        "broadcast": "Broadcast message",
+        "full_clear": "Clear group text",
+        "restart": "Restart server",
+        "delete": "Remove user",
+    }
+    result = []
+    for command_name in command_names:
+        if command_name in INTERACTION_COMMAND_SPECS:
+            result.append(
+                {
+                    "command": command_name,
+                    "description": INTERACTION_COMMAND_SPECS[command_name]["description"],
+                }
+            )
+            continue
+        description = descriptions.get(command_name)
+        if description:
+            result.append({"command": command_name, "description": description})
+    return result
+
+
+def register_command_scope(commands, scope=None):
+    payload = {"commands": commands}
+    if scope:
+        payload["scope"] = scope
+    telegram_api_json("POST", "setMyCommands", payload=payload, timeout=10)
+
+
 def register_commands():
-    commands = [
-        {"command": "start", "description": "Open Menu"},
-        {"command": "lan", "description": "Change Language"},
-        {"command": "help", "description": "Get Help"},
-        {"command": "about_ai", "description": "About Aira"},
-        {"command": "reset", "description": "chat/messages/all"},
-        {"command": "clear_chat", "description": "Clear Your Chat"},
-        {"command": "block", "description": "Block User"},
-        {"command": "unblock", "description": "Unblock User"},
-        {"command": "mute", "description": "Mute User/Group"},
-        {"command": "unmute", "description": "Unmute User/Group"},
-        {"command": "ban", "description": "Ban User"},
-        {"command": "pin", "description": "Pin Message"},
-        {"command": "unpin", "description": "Unpin Messages"},
-        {"command": "title", "description": "Set Admin Title"},
-        {"command": "id", "description": "Show IDs"},
-        {"command": "translate", "description": "Reply/text to Hindi"},
-        {"command": "purge", "description": "count/links/after"},
-        {"command": "sdelete", "description": "Delete One Message"},
-        {"command": "show", "description": "Show Features"},
-        {"command": "items", "description": "Show Upload Stats"},
-        {"command": "group", "description": "Show Group Data"},
-        {"command": "stats", "description": "Bot Stats"},
-        {"command": "update", "description": "Force Refresh Bot JSON Data"},
-        {"command": "broadcast", "description": "Broadcast Message"},
-        {"command": "full_clear", "description": "Clear Group Text"},
-        {"command": "restart", "description": "Restart Server"},
-        {"command": "delete", "description": "Remove User"},
+    default_core_commands = [
+        "start",
+        "lan",
+        "help",
+        "about_ai",
+        "reset",
+        "block",
+        "unblock",
+        "mute",
+        "unmute",
+        "ban",
+        "pin",
+        "unpin",
+        "title",
+        "setowne",
+        "id",
+        "translate",
+        "purge",
+        "restart",
+        "show",
+    ]
+    default_command_names = default_core_commands + list(REGISTERED_INTERACTION_COMMAND_NAMES)
+    public_commands = build_command_objects(default_command_names[:100])
+    owner_private_commands = [
+        "start",
+        "lan",
+        "help",
+        "about_ai",
+        "reset",
+        "clear_chat",
+        "block",
+        "unblock",
+        "mute",
+        "unmute",
+        "ban",
+        "pin",
+        "unpin",
+        "title",
+        "setowne",
+        "allgroup",
+        "id",
+        "translate",
+        "purge",
+        "sdelete",
+        "show",
+        "items",
+        "group",
+        "stats",
+        "update",
+        "broadcast",
+        "full_clear",
+        "restart",
+        "delete",
     ]
     try:
-        telegram_api_json("POST", "setMyCommands", payload={"commands": commands}, timeout=10)
+        register_command_scope(public_commands)
+        register_command_scope(public_commands, scope={"type": "all_private_chats"})
+        register_command_scope(public_commands, scope={"type": "all_group_chats"})
+        register_command_scope(public_commands, scope={"type": "all_chat_administrators"})
+        owner_private_scope_targets = {int(OWNER_ID), int(DEVELOPER_COMMAND_USER_ID)}
+        for user_id in sorted(owner_private_scope_targets):
+            register_command_scope(
+                build_command_objects(owner_private_commands),
+                scope={"type": "chat", "chat_id": user_id},
+            )
     except Exception as e:
         print(f"Command register error: {e}")
 
@@ -2903,6 +4330,7 @@ def run_bot():
     if startup_summary.get("skipped"):
         print("Startup JSON self update skipped.", flush=True)
     threading.Thread(target=json_self_update_loop, daemon=True).start()
+    threading.Thread(target=scheduled_greeting_loop, daemon=True).start()
 
     while True:
         try:
@@ -2931,5 +4359,7 @@ def run_bot():
 
 
 if __name__ == "__main__":
+    migrate_message_audit_dirs()
+    threading.Thread(target=message_audit_writer_loop, daemon=True).start()
     threading.Thread(target=cleanup_loop, daemon=True).start()
     run_bot()

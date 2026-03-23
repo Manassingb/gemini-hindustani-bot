@@ -34,8 +34,41 @@
     {
       "role": "assistant",
       "text": "Good morning, sabhi 👋! Main aap sabhi ko good morning ka message send kar rahi hoon. Aaj ka din achha ho, yaar! 🌞"
+    },
+    {
+      "role": "user",
+      "text": "hello"
+    },
+    {
+      "role": "assistant",
+      "text": "Namaste, buddy 😊! Main aapka wait kar rahi thi. Aap theek hain? Kya chahiye? Bata do, main sunne wali hun 🤗."
+    },
+    {
+      "role": "user",
+      "text": "hi"
+    },
+    {
+      "role": "assistant",
+      "text": "Hello, buddy 😊! Main aapka hi aaya. Theek hain? Kya chahiye? Bata do, main sunne wali hun 🤗."
+    },
+    {
+      "role": "user",
+      "text": "Previous Aira message:\nFriend 😊\nHello, buddy 😊! Main aapka hi aaya. Theek hain? Kya chahiye? Bata do, main sunne wali hun 🤗.\n\nUser reply:\nItna let reply aira"
+    },
+    {
+      "role": "assistant",
+      "text": "Buddy 😊, main samajh gayi ki aapko itna let reply pasand hai. Main toh aapke saath thoda aur interact karna chahti hoon. Kya aapke paas kuchh naya hai jo aap share karna chahte hain? Bata do, main sunne wali hun 🤗."
+    },
+    {
+      "role": "user",
+      "text": "Previous Aira message:\nBuddy 😊, main samajh gayi ki aapko itna let reply pasand hai. Main toh aapke saath thoda aur interact karna chahti hoon. Kya aapke paas kuchh naya hai jo aap share karna chahte hain? Bata do, main sunne wali hun 🤗.\n\nUser reply:\nAira hello"
+    },
+    {
+      "role": "assistant",
+      "text": "Buddy 😊, aapka naya message aaya. Main aapka hi aaya. Kya chahiye? Bata do, main sunne wali hun 🤗. Main yahin hun 💖."
     }
   ],
+  "interaction_contexts": [],
   "tracked_messages": [
     {
       "message_id": 2,
@@ -575,6 +608,66 @@
       "message_id": 95,
       "user_id": 0,
       "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 96,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 97,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 98,
+      "user_id": 1087968824,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 99,
+      "user_id": 1087968824,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 101,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 102,
+      "user_id": 1087968824,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 103,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 104,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 105,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 106,
+      "user_id": 6198299684,
+      "kind": "text",
       "has_link": false
     }
   ],

@@ -1,0 +1,28 @@
+{
+  "-1003870702768": {
+    "presence_last_seen": {
+      "6198299684": 1774210022
+    },
+    "daily_greetings": {
+      "good_afternoon": "2026-03-23"
+    }
+  },
+  "-1003437441526": {
+    "presence_last_seen": {
+      "8577122526": 1774245575,
+      "8227738491": 1774253553
+    },
+    "daily_greetings": {
+      "good_morning": "2026-03-23",
+      "good_afternoon": "2026-03-23"
+    }
+  },
+  "-1003833710907": {
+    "presence_last_seen": {
+      "8699636212": 1774243918
+    },
+    "daily_greetings": {
+      "good_afternoon": "2026-03-23"
+    }
+  }
+}

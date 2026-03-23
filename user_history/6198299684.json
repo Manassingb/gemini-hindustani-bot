@@ -1,0 +1,131 @@
+{
+  "lang": "hinglish",
+  "lang_set_at": 0,
+  "user_lang_overrides": {},
+  "history": [
+    {
+      "role": "user",
+      "text": "hello"
+    },
+    {
+      "role": "assistant",
+      "text": "Hello 👋, main yahin hun 😊. Kaise ho aap?"
+    },
+    {
+      "role": "user",
+      "text": "hi"
+    },
+    {
+      "role": "assistant",
+      "text": "Hi 😊, main yahin hun. Aap kaise ho?"
+    },
+    {
+      "role": "user",
+      "text": "hello"
+    },
+    {
+      "role": "assistant",
+      "text": "Hello, main yahin hun 😊. Kaise ho aap?"
+    },
+    {
+      "role": "user",
+      "text": "hai"
+    },
+    {
+      "role": "assistant",
+      "text": "Hai 😊, main yahin hun. Kaise ho aap?"
+    },
+    {
+      "role": "user",
+      "text": "hi"
+    },
+    {
+      "role": "assistant",
+      "text": "Hi 😊, main yahin hun. Kaise ho aap?"
+    },
+    {
+      "role": "user",
+      "text": "kesi hai re tu bata jara"
+    },
+    {
+      "role": "assistant",
+      "text": "Main theek hoon 😊, aapke saath hi. Kaise ho aap?"
+    }
+  ],
+  "interaction_contexts": [],
+  "tracked_messages": [
+    {
+      "message_id": 1643,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 1644,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 1645,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 1646,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 1655,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 1656,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 1660,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 1661,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 1662,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 1663,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 1664,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 1665,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    }
+  ],
+  "temp_blocked_users": {}
+}

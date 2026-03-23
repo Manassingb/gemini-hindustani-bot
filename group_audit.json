@@ -2,6 +2,7 @@
   "-1003437441526": {
     "chat_id": -1003437441526,
     "title": "༒•EᒪITEᔕᗯOᖇᒪᗪ•༒",
+    "status": "active",
     "owner_id": 8227738491,
     "owner": "𝗞𝗔𝗡𝗛𝗔",
     "admin_ids": [
@@ -34,11 +35,22 @@
       "ㅤㅤ𝐋𝐀𝐌𝐘 !!"
     ],
     "members": 299,
-    "updated_at": 1774254643
+    "added_by_id": null,
+    "added_by_name": "",
+    "added_at": 0,
+    "promoted_by_id": null,
+    "promoted_by_name": "",
+    "promoted_at": 0,
+    "removed_by_id": null,
+    "removed_by_name": "",
+    "removed_at": 0,
+    "welcome_message": "",
+    "updated_at": 1774254644
   },
   "-1003833710907": {
     "chat_id": -1003833710907,
     "title": "Masti Ki Dhadkan 💞❤️",
+    "status": "active",
     "owner_id": 8699636212,
     "owner": "✨ 👑 **Gauri Shankar** ✨",
     "admin_ids": [
@@ -53,11 +65,22 @@
       "Jessica"
     ],
     "members": 4,
-    "updated_at": 1774254642
+    "added_by_id": null,
+    "added_by_name": "",
+    "added_at": 0,
+    "promoted_by_id": null,
+    "promoted_by_name": "",
+    "promoted_at": 0,
+    "removed_by_id": null,
+    "removed_by_name": "",
+    "removed_at": 0,
+    "welcome_message": "",
+    "updated_at": 1774254643
   },
   "-1003870702768": {
     "chat_id": -1003870702768,
     "title": "Research Aira Ai",
+    "status": "active",
     "owner_id": 5612964044,
     "owner": "𝐂𝐡𝐞𝐜𝐤𝐦𝐚𝐭𝐞 𝐛𝐲 𝐉𝐚𝐯𝐚 ♟️☕",
     "admin_ids": [
@@ -70,6 +93,16 @@
       "Aira ai"
     ],
     "members": 7,
-    "updated_at": 1774254631
+    "added_by_id": null,
+    "added_by_name": "",
+    "added_at": 0,
+    "promoted_by_id": null,
+    "promoted_by_name": "",
+    "promoted_at": 0,
+    "removed_by_id": null,
+    "removed_by_name": "",
+    "removed_at": 0,
+    "welcome_message": "",
+    "updated_at": 1774254642
   }
 }
