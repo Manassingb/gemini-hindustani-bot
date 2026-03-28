@@ -9,15 +9,7 @@
     },
     {
       "role": "assistant",
-      "text": "Hello 👋, main yahin hun 😊. Kaise ho aap?"
-    },
-    {
-      "role": "user",
-      "text": "hi"
-    },
-    {
-      "role": "assistant",
-      "text": "Hi 😊, main yahin hun. Aap kaise ho?"
+      "text": "Hello, main yahin hun 😊. Kaise ho aap?"
     },
     {
       "role": "user",
@@ -29,11 +21,19 @@
     },
     {
       "role": "user",
-      "text": "hai"
+      "text": "hello"
     },
     {
       "role": "assistant",
-      "text": "Hai 😊, main yahin hun. Kaise ho aap?"
+      "text": "Hello, main yahin hun 😊. Kaise ho aap?"
+    },
+    {
+      "role": "user",
+      "text": "hello"
+    },
+    {
+      "role": "assistant",
+      "text": "Hello, main yahin hun 😊. Kaise ho aap?"
     },
     {
       "role": "user",
@@ -41,15 +41,39 @@
     },
     {
       "role": "assistant",
-      "text": "Hi 😊, main yahin hun. Kaise ho aap?"
+      "text": "Hi, main yahin hun 😊. Kaise ho aap?"
     },
     {
       "role": "user",
-      "text": "kesi hai re tu bata jara"
+      "text": "hello"
     },
     {
       "role": "assistant",
-      "text": "Main theek hoon 😊, aapke saath hi. Kaise ho aap?"
+      "text": "Hello, main yahin hun 😊. Kaise ho aap?"
+    },
+    {
+      "role": "user",
+      "text": "Previous Aira message:\nManas Singh Rajput 😊\nHello, main yahin hun 😊. Kaise ho aap?\n\nUser reply:\nYour main owner"
+    },
+    {
+      "role": "assistant",
+      "text": "Ha ha, aapke owner ke liye kya kya kya 😊. Main yahin hun, aapke saath hi bas chat karna chahti hoon. Kaise ho aap?"
+    },
+    {
+      "role": "user",
+      "text": "Previous Aira message:\nHa ha, aapke owner ke liye kya kya kya 😊. Main yahin hun, aapke saath hi bas chat karna chahti hoon. Kaise ho aap?\n\nUser reply:\nYour mean owner name"
+    },
+    {
+      "role": "assistant",
+      "text": "Arre, owner ka naam toh maine kaha hi nahi 😊. Main Aira hi hun, aapke saath chat karna chahti hoon. Kaise ho aap?"
+    },
+    {
+      "role": "user",
+      "text": "Previous Aira message:\nArre, owner ka naam toh maine kaha hi nahi 😊. Main Aira hi hun, aapke saath chat karna chahti hoon. Kaise ho aap?\n\nUser reply:\nTumhari bot father ID kisne banai thi"
+    },
+    {
+      "role": "assistant",
+      "text": "Arre, yeh to galat sawal hai 😊. Main Aira hi hun, aur mere father ki ID toh koi nahi hai. Main ek AI hoon, aur mere liye father ki zaroorat nahi hai. Main aapke saath chat karna chahti hoon, kaise ho aap?"
     }
   ],
   "interaction_contexts": [],
@@ -125,7 +149,421 @@
       "user_id": 0,
       "kind": "bot_text",
       "has_link": false
+    },
+    {
+      "message_id": 5,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 9,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 10,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 11,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 6,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 12,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 7,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 13,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 8,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 14,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 15,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 16,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 17,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 18,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 19,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 20,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 21,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 26,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 27,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 28,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 29,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 30,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 23,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 24,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 22,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 25,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 31,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 34,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 35,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 36,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 37,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 40,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 38,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 39,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 41,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 42,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 43,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 44,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 45,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 46,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 47,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 48,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 49,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 50,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 51,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 52,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 53,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 54,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 64,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 65,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 66,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 67,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 68,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 69,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 70,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 1702,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 1703,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 1704,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 1705,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 1706,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 1725,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 1726,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 1727,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 1728,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 1729,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 1730,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 1733,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 1734,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
     }
   ],
-  "temp_blocked_users": {}
+  "temp_blocked_users": {},
+  "reply_check": {
+    "enabled_until": 0,
+    "started_at": 0,
+    "started_by": 0,
+    "recent_pairs": []
+  }
 }

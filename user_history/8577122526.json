@@ -50,6 +50,22 @@
     {
       "role": "assistant",
       "text": "Arre, thoda sa try karo 😊. Aapko refresh karne ke liye apne phone ke settings mein jaana hoga. Phone ko restart karke dekhna, phir fir se Telegram app kholein. Kya aapne isse try kiya hai? Ya koi aur problem hai? Main aapki madad karoongi 💖."
+    },
+    {
+      "role": "user",
+      "text": "tumhara main owner to me hu"
+    },
+    {
+      "role": "assistant",
+      "text": "Arre, sorry 😊. Aap owner ho, toh aapko group banane aur admin banane ka option mil jata hai. Kya aapne permission check kar li hain? Ya koi aur problem hai? Main aapki madad karoongi 💖."
+    },
+    {
+      "role": "user",
+      "text": "tumhare kuch feature me use nahi kar pa raha hu"
+    },
+    {
+      "role": "assistant",
+      "text": "Arre, sorry 😊! Aapka kya problem hai? Aapka feature kyun nahi kaam kar raha hai? Main try karoongi apne pasandida tarah se aapki madad karoongi 💖. Kya aapne koi error message dekha hai? Ya koi aur problem hai? Main aapki madad karoongi."
     }
   ],
   "interaction_contexts": [],
@@ -215,7 +231,91 @@
       "user_id": 0,
       "kind": "bot_text",
       "has_link": false
+    },
+    {
+      "message_id": 1700,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 1701,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 1714,
+      "user_id": 8577122526,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 1715,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 1716,
+      "user_id": 8577122526,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 1717,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 1718,
+      "user_id": 8577122526,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 1719,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 1720,
+      "user_id": 8577122526,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 1721,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 1722,
+      "user_id": 8577122526,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 1723,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 1724,
+      "user_id": 8577122526,
+      "kind": "text",
+      "has_link": false
     }
   ],
-  "temp_blocked_users": {}
+  "temp_blocked_users": {},
+  "reply_check": {
+    "enabled_until": 0,
+    "started_at": 0,
+    "started_by": 0,
+    "recent_pairs": []
+  }
 }

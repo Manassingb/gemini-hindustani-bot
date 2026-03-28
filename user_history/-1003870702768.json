@@ -5,51 +5,19 @@
   "history": [
     {
       "role": "user",
-      "text": "Previous Aira message:\nManas Singh Rajput 😊\nHello yaar 😊, aap theek hain? Kya chal raha hai? 😊\n\nUser reply:\nBadhi ya hun kuchh aur bhi kya janna hai tumko kuchh aur batao"
+      "text": "/setowne@ a_ai_assistant_bot"
     },
     {
       "role": "assistant",
-      "text": "Arre, yaar 😊, aap theek hain na? Main to aapke saath chat kar rahi hoon, aur aapke saath mast time pass kar rahi hoon. Kya aapko koi favorite movie hai ya koi favorite hobby hai? 🤗"
+      "text": "Main yahin hun 😊 | Tumhari set town ho gayi hai. Main ab aapke message sun sakta hoon. Kya aapke paas koi sawal ya chiz hai jo main aapki madad kar sakoon?"
     },
     {
       "role": "user",
-      "text": "Previous Aira message:\nArre, yaar 😊, aap theek hain na? Main to aapke saath chat kar rahi hoon, aur aapke saath mast time pass kar rahi hoon. Kya aapko koi favorite movie hai ya koi favorite hobby hai? 🤗\n\nUser reply:\nYahi janna tha tumko"
+      "text": "/setowne@ a_ai_assistant_bot"
     },
     {
       "role": "assistant",
-      "text": "Arre, yaar 😊, theek hai. Main aapke saath yahi time pass kar rahi hoon. Kya aapko koi favorite food hai ya koi favorite destination hai? 🤗"
-    },
-    {
-      "role": "user",
-      "text": "Previous Aira message:\nMera bot system Python me bana hai.\n\nUser reply:\nAchha"
-    },
-    {
-      "role": "assistant",
-      "text": "Yaar, achha hai na? Python ek bahut hi powerful programming language hai. Kya aap Python se kuchh project banane ke plans hai? 😊"
-    },
-    {
-      "role": "user",
-      "text": "Previous Aira message:\nYaar, achha hai na? Python ek bahut hi powerful programming language hai. Kya aap Python se kuchh project banane ke plans hai? 😊\n\nUser reply:\nTum code likh sakti ho kon kon si language aati hai tuko"
-    },
-    {
-      "role": "assistant",
-      "text": "Yaar, haan, main code likh sakti hoon. Meri programming languages bahut hi kamal hai. Main Python, Java, C++, aur JavaScript jaise languages aati hoon. 😊"
-    },
-    {
-      "role": "user",
-      "text": "Previous Aira message:\nYaar, haan, main code likh sakti hoon. Meri programming languages bahut hi kamal hai. Main Python, Java, C++, aur JavaScript jaise languages aati hoon. 😊\n\nUser reply:\nThik ek test lete hai assembly language mein addition ka program"
-    },
-    {
-      "role": "assistant",
-      "text": "Arre, yaar 😊, thoda assembly language mein addition ka program likh leti hoon. Main aapko ek simple program likhungi: ```\nMOV AX, 10\nADD AX, 20\nMOV BX, AX\nMOV AX, BX\nMOV DX, AX\nMOV AH, 4CH\nINT 21H\n``` Yeh program aapko 30 ka output dega. Kya aapko yeh program pasand aaya? 😊"
-    },
-    {
-      "role": "user",
-      "text": "Previous Aira message:\nArre, yaar 😊, thoda assembly language mein addition ka program likh leti hoon. Main aapko ek simple program likhungi: MOV AX, 10\nADD AX, 20\nMOV BX, AX\nMOV AX, BX\nMOV DX, AX\nMOV AH, 4CH\nINT 21H\n Yeh program aapko 30 ka output dega. Kya aapko yeh program pasand aaya? 😊\n\nUser reply:\nHm"
-    },
-    {
-      "role": "assistant",
-      "text": "Arre, yaar 😊, thoda confusion hai na? Yeh program theek se nahi hai. Main aapko ek sahi program likhungi: MOV AX, 10\nADD AX, 20\nMOV DX, AX\nMOV AH, 4CH\nINT 21H Yeh program aapko 30 ka output dega. Kya aapko yeh program pasand aaya? 😊"
+      "text": "Tumhari set town ho gayi hai 😊 | Main yahin hun. Kya aapke paas koi sawal ya chiz hai jo main aapki madad kar sakoon?"
     },
     {
       "role": "user",
@@ -57,7 +25,7 @@
     },
     {
       "role": "assistant",
-      "text": "Arre, yaar 😊, hello! Kya chal raha hai aapke saath? 😊"
+      "text": "Namaste! 😊 | Hello! Main yahin hun. Kaise ho aap?"
     },
     {
       "role": "user",
@@ -65,824 +33,1295 @@
     },
     {
       "role": "assistant",
-      "text": "Hello yaar 😊, aap theek hain? Kya chal raha hai? 😊"
+      "text": "Hello! Main yahin hun 😊 | Kaise ho aap?"
     },
     {
       "role": "user",
-      "text": "Previous Aira message:\nManas Singh Rajput 😊\nHello yaar 😊, aap theek hain? Kya chal raha hai? 😊\n\nUser reply:\nTum kesi ho"
+      "text": "/allgroup@ a_ai_assistant_bot"
     },
     {
       "role": "assistant",
-      "text": "Arre, yaar 😊, main theek hoon. Aapke saath chat kar rahi hoon. Kya aapke saath kuchh mast time pass karne ke plans hai? 🤗"
+      "text": "Yay! Group chat shuru ho gaya hai 🤩 | Main yahin hun. Sab logon ko namaste! 👋 | Kaise ho aap sab?"
+    },
+    {
+      "role": "user",
+      "text": "hello"
+    },
+    {
+      "role": "assistant",
+      "text": "Hello! Main yahin hun 😊 | Kaise ho aap?"
     }
   ],
   "interaction_contexts": [
     {
-      "message_id": 3124,
-      "command": "fight",
-      "command_display": "Fight",
-      "emoji": "🥷",
-      "actor_id": 6198299684,
-      "actor_name": "Manas Singh Rajput",
+      "message_id": 3644,
+      "command": "welcome",
+      "command_display": "Welcome",
+      "emoji": "🎉",
+      "actor_id": 5612964044,
+      "actor_name": "𝐂𝐡𝐞𝐜𝐤𝐦𝐚𝐭𝐞 𝐛𝐲 𝐉𝐚𝐯𝐚 ♟️☕",
       "target_id": 0,
       "target_name": "",
-      "caption_text": "🥷 Fight\nManas Singh Rajput fight mode me charged up hai 🥷",
-      "summary": "Manas Singh Rajput used Fight with 🥷.",
-      "created_at": 1774208567
-    },
-    {
-      "message_id": 3126,
-      "command": "goodnight",
-      "command_display": "Good Night",
-      "emoji": "🌙",
-      "actor_id": 6198299684,
-      "actor_name": "Manas Singh Rajput",
-      "target_id": 0,
-      "target_name": "",
-      "caption_text": "🌙 Good Night\nManas Singh Rajput sabko cozy good night wish kar raha hai 🌙",
-      "summary": "Manas Singh Rajput used Good Night with 🌙.",
-      "created_at": 1774208608
-    },
-    {
-      "message_id": 3129,
-      "command": "kiss",
-      "command_display": "Kiss",
-      "emoji": "😘",
-      "actor_id": 6198299684,
-      "actor_name": "Manas Singh Rajput",
-      "target_id": 5612964044,
-      "target_name": "𝐂𝐡𝐞𝐜𝐤𝐦𝐚𝐭𝐞 𝐛𝐲 𝐉𝐚𝐯𝐚 ♟️☕",
-      "caption_text": "😘 Kiss\nManas Singh Rajput ne 𝐂𝐡𝐞𝐜𝐤𝐦𝐚𝐭𝐞 𝐛𝐲 𝐉𝐚𝐯𝐚 ♟️☕ ko pyaara sa kiss diya 😘",
-      "summary": "Manas Singh Rajput used Kiss on 𝐂𝐡𝐞𝐜𝐤𝐦𝐚𝐭𝐞 𝐛𝐲 𝐉𝐚𝐯𝐚 ♟️☕ with 😘.",
-      "created_at": 1774209219
-    },
-    {
-      "message_id": 3153,
-      "command": "fight",
-      "command_display": "Fight",
-      "emoji": "🥷",
-      "actor_id": 6198299684,
-      "actor_name": "Manas Singh Rajput",
-      "target_id": 0,
-      "target_name": "",
-      "caption_text": "🥷 Fight\nManas Singh Rajput fight mode me charged up hai 🥷",
-      "summary": "Manas Singh Rajput used Fight with 🥷.",
-      "created_at": 1774209961
-    },
-    {
-      "message_id": 3155,
-      "command": "flingkiss",
-      "command_display": "Fling Kiss",
-      "emoji": "💋",
-      "actor_id": 6198299684,
-      "actor_name": "Manas Singh Rajput",
-      "target_id": 0,
-      "target_name": "",
-      "caption_text": "💋 Fling Kiss\nManas Singh Rajput flying kiss vibes uda raha hai 💋",
-      "summary": "Manas Singh Rajput used Fling Kiss with 💋.",
-      "created_at": 1774209976
-    },
-    {
-      "message_id": 3157,
-      "command": "flingkiss",
-      "command_display": "Fling Kiss",
-      "emoji": "💋",
-      "actor_id": 6198299684,
-      "actor_name": "Manas Singh Rajput",
-      "target_id": 0,
-      "target_name": "",
-      "caption_text": "💋 Fling Kiss\nManas Singh Rajput flying kiss vibes uda raha hai 💋",
-      "summary": "Manas Singh Rajput used Fling Kiss with 💋.",
-      "created_at": 1774209981
-    },
-    {
-      "message_id": 3159,
-      "command": "flingkiss",
-      "command_display": "Fling Kiss",
-      "emoji": "💋",
-      "actor_id": 6198299684,
-      "actor_name": "Manas Singh Rajput",
-      "target_id": 0,
-      "target_name": "",
-      "caption_text": "💋 Fling Kiss\nManas Singh Rajput flying kiss vibes uda raha hai 💋",
-      "summary": "Manas Singh Rajput used Fling Kiss with 💋.",
-      "created_at": 1774209993
-    },
-    {
-      "message_id": 3172,
-      "command": "jump",
-      "command_display": "Jump",
-      "emoji": "🦘",
-      "actor_id": 6198299684,
-      "actor_name": "Manas Singh Rajput",
-      "target_id": 0,
-      "target_name": "",
-      "caption_text": "🦘 Jump\nManas Singh Rajput khushi me jump kar raha hai 🦘",
-      "summary": "Manas Singh Rajput used Jump with 🦘.",
-      "created_at": 1774210421
-    },
-    {
-      "message_id": 3190,
-      "command": "love",
-      "command_display": "Love",
-      "emoji": "❤️",
-      "actor_id": 6198299684,
-      "actor_name": "Manas Singh Rajput",
-      "target_id": 0,
-      "target_name": "",
-      "caption_text": "❤️ Love\nManas Singh Rajput love vibes uda raha hai ❤️",
-      "summary": "Manas Singh Rajput used Love with ❤️.",
-      "created_at": 1774211395
-    },
-    {
-      "message_id": 3192,
-      "command": "lol",
-      "command_display": "LOL",
-      "emoji": "🤣",
-      "actor_id": 6198299684,
-      "actor_name": "Manas Singh Rajput",
-      "target_id": 0,
-      "target_name": "",
-      "caption_text": "🤣 LOL\nManas Singh Rajput lol vibes me phat ke hans raha hai 🤣",
-      "summary": "Manas Singh Rajput used LOL with 🤣.",
-      "created_at": 1774211421
-    },
-    {
-      "message_id": 3194,
-      "command": "love",
-      "command_display": "Love",
-      "emoji": "❤️",
-      "actor_id": 6198299684,
-      "actor_name": "Manas Singh Rajput",
-      "target_id": 0,
-      "target_name": "",
-      "caption_text": "❤️ Love\nManas Singh Rajput love vibes uda raha hai ❤️",
-      "summary": "Manas Singh Rajput used Love with ❤️.",
-      "created_at": 1774211445
-    },
-    {
-      "message_id": 3204,
-      "command": "cheers",
-      "command_display": "Cheers",
-      "emoji": "🥂",
-      "actor_id": 6198299684,
-      "actor_name": "Manas Singh Rajput",
-      "target_id": 0,
-      "target_name": "",
-      "caption_text": "🥂 Cheers\nManas Singh Rajput sabke saath cheers vibe share kar raha hai 🥂",
-      "summary": "Manas Singh Rajput used Cheers with 🥂.",
-      "created_at": 1774247879
+      "caption_text": "🎉 Welcome\n𝐂𝐡𝐞𝐜𝐤𝐦𝐚𝐭𝐞 𝐛𝐲 𝐉𝐚𝐯𝐚 ♟️☕ sabko warmly welcome kar raha hai 🎉",
+      "summary": "𝐂𝐡𝐞𝐜𝐤𝐦𝐚𝐭𝐞 𝐛𝐲 𝐉𝐚𝐯𝐚 ♟️☕ used Welcome with 🎉.",
+      "created_at": 1774678416
     }
   ],
   "tracked_messages": [
     {
-      "message_id": 3090,
+      "message_id": 3525,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3526,
       "user_id": 6198299684,
       "kind": "text",
       "has_link": false
     },
     {
-      "message_id": 3094,
+      "message_id": 3527,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3528,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3529,
+      "user_id": 8699636212,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3530,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3531,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3532,
+      "user_id": 8699636212,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3533,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3534,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3535,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3536,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3537,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3538,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3539,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3540,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3541,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3542,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3543,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3544,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3545,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3546,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3547,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3548,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3549,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3550,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3551,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3552,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3553,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3554,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3555,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3556,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3557,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3558,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3559,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3560,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3561,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3562,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3563,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3564,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3565,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3566,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3567,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3568,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3569,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3570,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3571,
+      "user_id": 0,
+      "kind": "bot_system_notice",
+      "has_link": false
+    },
+    {
+      "message_id": 3572,
+      "user_id": 0,
+      "kind": "bot_system_notice",
+      "has_link": false
+    },
+    {
+      "message_id": 3573,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3574,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3575,
+      "user_id": 0,
+      "kind": "bot_system_notice",
+      "has_link": false
+    },
+    {
+      "message_id": 3576,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3577,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3578,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3579,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3580,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3581,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3582,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3583,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3585,
+      "user_id": 0,
+      "kind": "bot_system_notice",
+      "has_link": false
+    },
+    {
+      "message_id": 3586,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3584,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3587,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3588,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3589,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3590,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3591,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3592,
+      "user_id": 0,
+      "kind": "bot_system_notice",
+      "has_link": false
+    },
+    {
+      "message_id": 3593,
+      "user_id": 0,
+      "kind": "bot_system_notice",
+      "has_link": false
+    },
+    {
+      "message_id": 3595,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3594,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3596,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3597,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3598,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3599,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3600,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3601,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3602,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3603,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3604,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3605,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3606,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3607,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3608,
       "user_id": 5612964044,
       "kind": "text",
       "has_link": false
     },
     {
-      "message_id": 3099,
-      "user_id": 0,
-      "kind": "bot_text",
-      "has_link": false
-    },
-    {
-      "message_id": 3100,
+      "message_id": 3609,
       "user_id": 6198299684,
       "kind": "text",
       "has_link": false
     },
     {
-      "message_id": 3101,
+      "message_id": 3610,
       "user_id": 0,
-      "kind": "bot_text",
+      "kind": "bot_interaction",
       "has_link": false
     },
     {
-      "message_id": 3102,
-      "user_id": 6198299684,
-      "kind": "text",
-      "has_link": false
-    },
-    {
-      "message_id": 3103,
-      "user_id": 0,
-      "kind": "bot_text",
-      "has_link": false
-    },
-    {
-      "message_id": 3104,
+      "message_id": 3611,
       "user_id": 5612964044,
       "kind": "text",
       "has_link": false
     },
     {
-      "message_id": 3105,
+      "message_id": 3612,
       "user_id": 0,
-      "kind": "bot_text",
+      "kind": "bot_interaction",
       "has_link": false
     },
     {
-      "message_id": 3106,
+      "message_id": 3613,
       "user_id": 6198299684,
       "kind": "text",
       "has_link": false
     },
     {
-      "message_id": 3107,
+      "message_id": 3614,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3615,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3616,
       "user_id": 5612964044,
       "kind": "text",
       "has_link": false
     },
     {
-      "message_id": 3108,
+      "message_id": 3617,
       "user_id": 0,
       "kind": "bot_text",
       "has_link": false
     },
     {
-      "message_id": 3109,
-      "user_id": 8158965259,
-      "kind": "media",
+      "message_id": 3618,
+      "user_id": 6198299684,
+      "kind": "text",
       "has_link": false
     },
     {
-      "message_id": 3110,
+      "message_id": 3619,
       "user_id": 0,
       "kind": "bot_text",
       "has_link": false
     },
     {
-      "message_id": 3111,
+      "message_id": 3620,
       "user_id": 5612964044,
       "kind": "text",
       "has_link": false
     },
     {
-      "message_id": 3112,
+      "message_id": 3621,
       "user_id": 0,
       "kind": "bot_text",
       "has_link": false
     },
     {
-      "message_id": 3113,
+      "message_id": 3622,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3623,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3625,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3624,
       "user_id": 5612964044,
       "kind": "text",
       "has_link": false
     },
     {
-      "message_id": 3114,
-      "user_id": 0,
-      "kind": "bot_text",
-      "has_link": false
-    },
-    {
-      "message_id": 3115,
+      "message_id": 3626,
       "user_id": 5612964044,
       "kind": "text",
       "has_link": false
     },
     {
-      "message_id": 3116,
+      "message_id": 3627,
       "user_id": 0,
       "kind": "bot_text",
       "has_link": false
     },
     {
-      "message_id": 3117,
+      "message_id": 3628,
       "user_id": 5612964044,
       "kind": "text",
       "has_link": false
     },
     {
-      "message_id": 3118,
+      "message_id": 3629,
       "user_id": 0,
       "kind": "bot_text",
       "has_link": false
     },
     {
-      "message_id": 3119,
+      "message_id": 3639,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3640,
       "user_id": 5612964044,
       "kind": "text",
       "has_link": false
     },
     {
-      "message_id": 3120,
+      "message_id": 3642,
       "user_id": 0,
       "kind": "bot_text",
       "has_link": false
     },
     {
-      "message_id": 3121,
+      "message_id": 3641,
       "user_id": 5612964044,
       "kind": "text",
       "has_link": false
     },
     {
-      "message_id": 3122,
+      "message_id": 3643,
       "user_id": 0,
       "kind": "bot_text",
       "has_link": false
     },
     {
-      "message_id": 3123,
-      "user_id": 6198299684,
-      "kind": "text",
-      "has_link": false
-    },
-    {
-      "message_id": 3124,
+      "message_id": 3644,
       "user_id": 0,
       "kind": "bot_interaction",
       "has_link": false
     },
     {
-      "message_id": 3125,
-      "user_id": 6198299684,
+      "message_id": 3645,
+      "user_id": 5612964044,
       "kind": "text",
       "has_link": false
     },
     {
-      "message_id": 3126,
-      "user_id": 0,
-      "kind": "bot_interaction",
-      "has_link": false
-    },
-    {
-      "message_id": 3127,
-      "user_id": 6198299684,
-      "kind": "text",
-      "has_link": false
-    },
-    {
-      "message_id": 3128,
-      "user_id": 6198299684,
-      "kind": "text",
-      "has_link": false
-    },
-    {
-      "message_id": 3129,
-      "user_id": 0,
-      "kind": "bot_interaction",
-      "has_link": false
-    },
-    {
-      "message_id": 3130,
-      "user_id": 6198299684,
-      "kind": "text",
-      "has_link": false
-    },
-    {
-      "message_id": 3131,
+      "message_id": 3646,
       "user_id": 0,
       "kind": "bot_text",
       "has_link": false
     },
     {
-      "message_id": 3132,
-      "user_id": 6198299684,
+      "message_id": 3647,
+      "user_id": 5612964044,
       "kind": "text",
       "has_link": false
     },
     {
-      "message_id": 3133,
+      "message_id": 3648,
       "user_id": 0,
       "kind": "bot_text",
       "has_link": false
     },
     {
-      "message_id": 3134,
+      "message_id": 3649,
       "user_id": 6198299684,
       "kind": "text",
       "has_link": false
     },
     {
-      "message_id": 3135,
+      "message_id": 3650,
       "user_id": 0,
       "kind": "bot_text",
       "has_link": false
     },
     {
-      "message_id": 3136,
+      "message_id": 3651,
       "user_id": 6198299684,
       "kind": "text",
       "has_link": false
     },
     {
-      "message_id": 3137,
+      "message_id": 3652,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3653,
       "user_id": 0,
       "kind": "bot_text",
       "has_link": false
     },
     {
-      "message_id": 3138,
+      "message_id": 3654,
       "user_id": 6198299684,
       "kind": "text",
       "has_link": false
     },
     {
-      "message_id": 3139,
+      "message_id": 3655,
       "user_id": 0,
       "kind": "bot_text",
       "has_link": false
     },
     {
-      "message_id": 3140,
-      "user_id": 6198299684,
+      "message_id": 3656,
+      "user_id": 5612964044,
       "kind": "text",
       "has_link": false
     },
     {
-      "message_id": 3141,
+      "message_id": 3657,
       "user_id": 0,
       "kind": "bot_text",
       "has_link": false
     },
     {
-      "message_id": 3142,
-      "user_id": 6198299684,
+      "message_id": 3658,
+      "user_id": 5612964044,
       "kind": "text",
       "has_link": false
     },
     {
-      "message_id": 3143,
-      "user_id": 6198299684,
-      "kind": "text",
-      "has_link": false
-    },
-    {
-      "message_id": 3144,
+      "message_id": 3659,
       "user_id": 0,
       "kind": "bot_text",
       "has_link": false
     },
     {
-      "message_id": 3145,
-      "user_id": 6198299684,
+      "message_id": 3660,
+      "user_id": 5612964044,
       "kind": "text",
       "has_link": false
     },
     {
-      "message_id": 3146,
+      "message_id": 3661,
       "user_id": 0,
       "kind": "bot_text",
       "has_link": false
     },
     {
-      "message_id": 3147,
+      "message_id": 3662,
       "user_id": 6198299684,
       "kind": "text",
       "has_link": false
     },
     {
-      "message_id": 3148,
+      "message_id": 3663,
       "user_id": 0,
       "kind": "bot_text",
       "has_link": false
     },
     {
-      "message_id": 3149,
-      "user_id": 6198299684,
-      "kind": "text",
-      "has_link": false
-    },
-    {
-      "message_id": 3150,
+      "message_id": 3664,
       "user_id": 0,
       "kind": "bot_text",
       "has_link": false
     },
     {
-      "message_id": 3151,
+      "message_id": 3665,
+      "user_id": 5612964044,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3666,
       "user_id": 0,
       "kind": "bot_text",
       "has_link": false
     },
     {
-      "message_id": 3152,
+      "message_id": 3667,
       "user_id": 6198299684,
       "kind": "text",
       "has_link": false
     },
     {
-      "message_id": 3153,
-      "user_id": 0,
-      "kind": "bot_interaction",
-      "has_link": false
-    },
-    {
-      "message_id": 3154,
-      "user_id": 6198299684,
-      "kind": "text",
-      "has_link": false
-    },
-    {
-      "message_id": 3155,
-      "user_id": 0,
-      "kind": "bot_interaction",
-      "has_link": false
-    },
-    {
-      "message_id": 3156,
-      "user_id": 6198299684,
-      "kind": "text",
-      "has_link": false
-    },
-    {
-      "message_id": 3157,
-      "user_id": 0,
-      "kind": "bot_interaction",
-      "has_link": false
-    },
-    {
-      "message_id": 3158,
-      "user_id": 6198299684,
-      "kind": "text",
-      "has_link": false
-    },
-    {
-      "message_id": 3159,
-      "user_id": 0,
-      "kind": "bot_interaction",
-      "has_link": false
-    },
-    {
-      "message_id": 3160,
-      "user_id": 6198299684,
-      "kind": "text",
-      "has_link": false
-    },
-    {
-      "message_id": 3161,
+      "message_id": 3668,
       "user_id": 0,
       "kind": "bot_text",
       "has_link": false
     },
     {
-      "message_id": 3162,
-      "user_id": 0,
-      "kind": "bot_text",
-      "has_link": false
-    },
-    {
-      "message_id": 3163,
+      "message_id": 3669,
       "user_id": 6198299684,
       "kind": "text",
       "has_link": false
     },
     {
-      "message_id": 3164,
+      "message_id": 3670,
       "user_id": 0,
       "kind": "bot_text",
       "has_link": false
     },
     {
-      "message_id": 3165,
-      "user_id": 6198299684,
-      "kind": "text",
-      "has_link": false
-    },
-    {
-      "message_id": 3166,
+      "message_id": 3671,
       "user_id": 0,
       "kind": "bot_text",
       "has_link": false
     },
     {
-      "message_id": 3167,
-      "user_id": 6198299684,
+      "message_id": 3672,
+      "user_id": 5612964044,
       "kind": "text",
       "has_link": false
     },
     {
-      "message_id": 3168,
+      "message_id": 3673,
       "user_id": 0,
       "kind": "bot_text",
       "has_link": false
     },
     {
-      "message_id": 3170,
+      "message_id": 3674,
+      "user_id": 5612964044,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3675,
       "user_id": 0,
       "kind": "bot_text",
       "has_link": false
     },
     {
-      "message_id": 3171,
+      "message_id": 3676,
       "user_id": 6198299684,
       "kind": "text",
       "has_link": false
     },
     {
-      "message_id": 3172,
-      "user_id": 0,
-      "kind": "bot_interaction",
-      "has_link": false
-    },
-    {
-      "message_id": 3173,
-      "user_id": 6198299684,
-      "kind": "text",
-      "has_link": false
-    },
-    {
-      "message_id": 3174,
+      "message_id": 3677,
       "user_id": 0,
       "kind": "bot_text",
       "has_link": false
     },
     {
-      "message_id": 3175,
-      "user_id": 6198299684,
+      "message_id": 3678,
+      "user_id": 5612964044,
       "kind": "text",
       "has_link": false
     },
     {
-      "message_id": 3176,
+      "message_id": 3679,
       "user_id": 0,
       "kind": "bot_text",
       "has_link": false
     },
     {
-      "message_id": 3177,
+      "message_id": 3680,
       "user_id": 6198299684,
       "kind": "text",
       "has_link": false
     },
     {
-      "message_id": 3178,
+      "message_id": 3681,
       "user_id": 0,
       "kind": "bot_text",
       "has_link": false
     },
     {
-      "message_id": 3179,
-      "user_id": 6198299684,
-      "kind": "text",
-      "has_link": false
-    },
-    {
-      "message_id": 3180,
+      "message_id": 3683,
       "user_id": 0,
       "kind": "bot_text",
       "has_link": false
     },
     {
-      "message_id": 3181,
+      "message_id": 3682,
+      "user_id": 5612964044,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3684,
+      "user_id": 5612964044,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3686,
+      "user_id": 5612964044,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3685,
+      "user_id": 5612964044,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3687,
       "user_id": 6198299684,
       "kind": "text",
       "has_link": false
     },
     {
-      "message_id": 3182,
+      "message_id": 3688,
       "user_id": 0,
       "kind": "bot_text",
       "has_link": false
     },
     {
-      "message_id": 3183,
-      "user_id": 6198299684,
-      "kind": "text",
-      "has_link": false
-    },
-    {
-      "message_id": 3184,
+      "message_id": 3689,
       "user_id": 0,
       "kind": "bot_text",
       "has_link": false
     },
     {
-      "message_id": 3185,
-      "user_id": 6198299684,
-      "kind": "text",
-      "has_link": false
-    },
-    {
-      "message_id": 3186,
+      "message_id": 3690,
       "user_id": 0,
       "kind": "bot_text",
       "has_link": false
     },
     {
-      "message_id": 3187,
-      "user_id": 6198299684,
-      "kind": "text",
-      "has_link": false
-    },
-    {
-      "message_id": 3188,
+      "message_id": 3692,
       "user_id": 0,
       "kind": "bot_text",
       "has_link": false
     },
     {
-      "message_id": 3189,
-      "user_id": 6198299684,
+      "message_id": 3691,
+      "user_id": 5612964044,
       "kind": "text",
       "has_link": false
     },
     {
-      "message_id": 3190,
-      "user_id": 0,
-      "kind": "bot_interaction",
-      "has_link": false
-    },
-    {
-      "message_id": 3191,
-      "user_id": 6198299684,
-      "kind": "text",
-      "has_link": false
-    },
-    {
-      "message_id": 3192,
-      "user_id": 0,
-      "kind": "bot_interaction",
-      "has_link": false
-    },
-    {
-      "message_id": 3193,
-      "user_id": 6198299684,
-      "kind": "text",
-      "has_link": false
-    },
-    {
-      "message_id": 3194,
-      "user_id": 0,
-      "kind": "bot_interaction",
-      "has_link": false
-    },
-    {
-      "message_id": 3197,
-      "user_id": 6198299684,
-      "kind": "text",
-      "has_link": false
-    },
-    {
-      "message_id": 3198,
+      "message_id": 3693,
       "user_id": 0,
       "kind": "bot_text",
       "has_link": false
     },
     {
-      "message_id": 3201,
-      "user_id": 0,
-      "kind": "bot_text",
-      "has_link": false
-    },
-    {
-      "message_id": 3202,
-      "user_id": 0,
-      "kind": "bot_text",
-      "has_link": false
-    },
-    {
-      "message_id": 3203,
+      "message_id": 3694,
       "user_id": 6198299684,
       "kind": "text",
       "has_link": false
     },
     {
-      "message_id": 3204,
-      "user_id": 0,
-      "kind": "bot_interaction",
-      "has_link": false
-    },
-    {
-      "message_id": 3205,
+      "message_id": 3695,
       "user_id": 0,
       "kind": "bot_text",
       "has_link": false
     },
     {
-      "message_id": 3206,
+      "message_id": 3696,
       "user_id": 6198299684,
       "kind": "text",
       "has_link": false
     },
     {
-      "message_id": 3207,
+      "message_id": 3697,
       "user_id": 0,
       "kind": "bot_text",
       "has_link": false
     },
     {
-      "message_id": 3208,
+      "message_id": 3698,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3699,
+      "user_id": 5612964044,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3700,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3701,
       "user_id": 6198299684,
       "kind": "text",
       "has_link": false
     },
     {
-      "message_id": 3209,
+      "message_id": 3702,
       "user_id": 0,
       "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3703,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3704,
+      "user_id": 5612964044,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3705,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3706,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3707,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3708,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3709,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3710,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3711,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3712,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3713,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3715,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3714,
+      "user_id": 5612964044,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3716,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3719,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3717,
+      "user_id": 5612964044,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3718,
+      "user_id": 5612964044,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3720,
+      "user_id": 5612964044,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3721,
+      "user_id": 5612964044,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3722,
+      "user_id": 5612964044,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3724,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3723,
+      "user_id": 5612964044,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3725,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3726,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3727,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3728,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3729,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3730,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3731,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3732,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3733,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3734,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3735,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3736,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3738,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3737,
+      "user_id": 5612964044,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3739,
+      "user_id": 6198299684,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 3740,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 3741,
+      "user_id": 6198299684,
+      "kind": "text",
       "has_link": false
     }
   ],
-  "temp_blocked_users": {}
+  "temp_blocked_users": {},
+  "reply_check": {
+    "enabled_until": 0,
+    "started_at": 0,
+    "started_by": 0,
+    "recent_pairs": []
+  }
 }

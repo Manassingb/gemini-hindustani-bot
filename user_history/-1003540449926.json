@@ -1,0 +1,49 @@
+{
+  "lang": "hinglish",
+  "lang_set_at": 0,
+  "user_lang_overrides": {},
+  "history": [
+    {
+      "role": "user",
+      "text": "Previous Aira message:\nAira ✧ (Updating..)\n✨ Hieeeee 𝐂𝐡𝐞𝐜𝐤𝐦𝐚𝐭𝐞 𝐛𝐲 𝐉𝐚𝐯𝐚 ♟️☕ 🌸\n━━━━━━━━━━━━━━━━━━━━\n\n💗 Simple, smart & friendly chat bot\n\nWhat can I do?\n• 💬 Fun & Easy Conversations\n• 🎮 Awesome Games & Economy\n• 🛡 Group Management & Safety\n• ✨ A Safe & Smooth Experience\n\n✦ Choose An Option Below :\n\nUser reply:\nHi"
+    },
+    {
+      "role": "assistant",
+      "text": "Hiiiii 😊 | Main yahin hun 💖. Kya chahte hain aap? Fun, game, group management ya something else? Chalo, batayein. 🤗"
+    }
+  ],
+  "interaction_contexts": [],
+  "tracked_messages": [
+    {
+      "message_id": 218,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 222,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 225,
+      "user_id": 5612964044,
+      "kind": "text",
+      "has_link": false
+    },
+    {
+      "message_id": 226,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    }
+  ],
+  "temp_blocked_users": {},
+  "reply_check": {
+    "enabled_until": 0,
+    "started_at": 0,
+    "started_by": 0,
+    "recent_pairs": []
+  }
+}

@@ -6,6 +6,7 @@ import re
 import sys
 import threading
 import time
+import fcntl
 
 import requests
 from dotenv import load_dotenv
@@ -16,7 +17,9 @@ from interaction_pack import (
 )
 
 
-load_dotenv()
+from dotenv import load_dotenv
+load_dotenv(".env", override=True)
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 
 def require_env(name):
@@ -51,16 +54,15 @@ def load_nvidia_api_keys():
     return keys
 
 
-# --- CONFIG ---
-BOT_TOKEN = require_env("BOT_TOKEN")
+
 BOT_ID = int(BOT_TOKEN.split(":", 1)[0])
 NVIDIA_API_KEYS = load_nvidia_api_keys()
 NVIDIA_API_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
 NVIDIA_MODEL = "meta/llama-3.1-8b-instruct"
 BOT_NAME = "aira"
 BOT_USERNAME = "hindustaniai_bot"
-OWNER_ID = require_int_env("OWNER_ID")
-DEVELOPER_COMMAND_USER_ID = 6198299684
+OWNER_ID = 6198299684
+DEVELOPER_COMMAND_USER_ID = OWNER_ID
 BOT_OWNER_DISPLAY_NAME = "✨ 👑 **Gauri Shankar** ✨"
 BOT_OWNER_DISPLAY_LINE = "✨ 👑 **Owner:** **Gauri Shankar** ✨"
 BOT_OWNER_NAME = re.sub(r"\s+", " ", re.sub(r"[*✨👑]", " ", BOT_OWNER_DISPLAY_NAME)).strip()
@@ -88,8 +90,16 @@ COMMAND_SPAM_WINDOW_SECONDS = 120
 COMMAND_SPAM_BLOCK_SECONDS = 120
 JSON_SELF_UPDATE_INTERVAL_SECONDS = 300
 JSON_UPDATE_FORCE_WAIT_SECONDS = 30
+REPLY_CHECK_DURATION_SECONDS = 30 * 60
+REPLY_CHECK_RECENT_LIMIT = 6
+REPLY_CHECK_COMPARE_LIMIT = 4
 DEBUG_POLICY_LOGS = False
 OWNER_RETURN_WELCOME_SECONDS = 60 * 60
+DEFAULT_WELCOME_COMMAND_TEMPLATE = (
+    "👑 Welcome back *{name}*\\! 💫\n"
+    "💖 Kaafi der baad aap aaye ho, group aur Aira dono khush hain.\n"
+    "🌷 Main yahin hun, kuchh chahiye ho to bata do."
+)
 SCHEDULED_GREETING_LOOP_SECONDS = 30
 DAILY_GREETING_SCHEDULE = {
     "good_morning": {"hour": 7, "minute": 0},
@@ -103,11 +113,15 @@ HISTORY_DIR = "user_history"
 MUTE_STATE_FILE = "mute_state.json"
 GROUPS_FILE = "groups.json"
 ITEMS_FILE = "items.json"
+WELCOME_USERS_FILE = "welcome_users.json"
 ADMIN_TITLES_FILE = "admin_titles.json"
 COMMAND_SPAM_FILE = "command_spam.json"
 OWNER_OVERRIDE_FILE = "owner_overrides.json"
+OWNER_PROFILE_FILE = "owner.json"
 GROUP_AUDIT_FILE = "group_audit.json"
 GROUP_ACTIVITY_FILE = "group_activity.json"
+SYSTEM_RUNTIME_FILE = "system_runtime.json"
+INSTANCE_LOCK_FILE = "bot.instance.lock"
 MESSAGE_AUDIT_DIR = "message_audit_logs"
 MESSAGE_AUDIT_RETENTION_SECONDS = 7 * 24 * 3600
 MESSAGE_AUDIT_QUEUE_MAXSIZE = 10000
@@ -201,7 +215,7 @@ NAME_REPLIES = {
 REACTION_EMOJIS = {"👍", "❤️", "😂", "🔥", "🎉", "👏", "🤩", "😍", "😢", "😮", "👎"}
 REACTION_KEYWORDS = {
     "❤️": {"thanks", "thank", "thankyou", "thank you", "thx", "tnx", "shukriya", "dhanyavad", "love", "happy"},
-    "👍": {"ok", "okay", "kk", "done", "great", "good", "nice", "cool", "sahi", "thik", "theek", "acha", "badhiya", "accha", "yes", "hm",},
+    "👍": {"ok", "okay", "kk", "done", "great", "good", "nice", "cool", "sahi", "thik", "theek", "badhiya", "accha", "yes", "hm",},
     "😂": {"lol", "lmao", "haha", "hehe", "rofl", "funny"},
     "🔥": {"fire", "lit", "awesome", "epic", "solid"},
     "🎉": {"congrats", "congratulations", "badhai", "celebrate", "party"},
@@ -229,7 +243,7 @@ SIMPLE_GREETINGS = {
     "jai shree radhe", "jai sri radhe", "jai shri radhe", "ram ram",
 }
 DEVELOPER_QUESTION_RE = re.compile(
-    r"(developer|devloper|creator|made you|kisne banaya|tumhe kisne banaya|aira ko kisne banaya|who made you|who created you|developer name)",
+    r"(developer|devloper|creator|made you|kisne banaya|tumhe kisne banaya|aira ko kisne banaya|who made you|who created you|developer name|karta dharta|karta-dharta)",
     re.IGNORECASE,
 )
 CREATED_WHEN_QUESTION_RE = re.compile(
@@ -251,6 +265,9 @@ ADMIN_QUESTION_RE = re.compile(
 
 HTTP = requests.Session()
 RESTART_REQUESTED = False
+AUTO_START_PANEL_SENT = False
+AUTO_SYSTEM_NOTICE_SENT = False
+INSTANCE_LOCK_HANDLE = None
 ADMIN_CACHE = {}
 USER_VIOLATIONS = {}
 JSON_UPDATE_LOCK = threading.Lock()
@@ -329,6 +346,13 @@ FORBIDDEN_ADDRESS_VARIANTS = {
 
 
 # --- JSON / FILE HELPERS ---
+def load_welcome_users():
+    return normalize_welcome_users_store(load_json_file(WELCOME_USERS_FILE, {}))
+
+def save_welcome_users(data):
+    save_json_file(WELCOME_USERS_FILE, normalize_welcome_users_store(data))
+
+
 
 def load_json_file(path, default):
     if os.path.exists(path):
@@ -343,6 +367,187 @@ def load_json_file(path, default):
 def save_json_file(path, data):
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
+
+
+def load_static_owner_profile():
+    raw = load_json_file(OWNER_PROFILE_FILE, {})
+    if not isinstance(raw, dict):
+        raw = {}
+    owner_name = str(raw.get("owner_name") or raw.get("name") or BOT_OWNER_NAME).strip() or BOT_OWNER_NAME
+    developer_name = str(raw.get("developer_name") or owner_name).strip() or owner_name
+    return {
+        "owner_id": coerce_int(raw.get("owner_id"), OWNER_ID),
+        "owner_name": owner_name,
+        "developer_name": developer_name,
+    }
+
+
+def acquire_instance_lock():
+    global INSTANCE_LOCK_HANDLE
+    lock_path = os.path.abspath(INSTANCE_LOCK_FILE)
+    lock_handle = open(lock_path, "a+", encoding="utf-8")
+    try:
+        fcntl.flock(lock_handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        lock_handle.close()
+        print("Another bot.py instance is already running. Exiting duplicate process.", flush=True)
+        return False
+
+    lock_handle.seek(0)
+    lock_handle.truncate()
+    lock_handle.write(str(os.getpid()))
+    lock_handle.flush()
+    INSTANCE_LOCK_HANDLE = lock_handle
+    return True
+
+
+def load_system_runtime_state():
+    raw = load_json_file(SYSTEM_RUNTIME_FILE, {})
+    if not isinstance(raw, dict):
+        raw = {}
+    pending_notice = str(raw.get("pending_notice") or "").strip().lower()
+    if pending_notice not in {"", "restart"}:
+        pending_notice = ""
+    last_notice_date = str(raw.get("last_notice_date") or "").strip()
+    last_notice_mode = str(raw.get("last_notice_mode") or "").strip().lower()
+    if last_notice_mode not in {"", "startup", "restart"}:
+        last_notice_mode = ""
+    today_key = time.strftime("%Y-%m-%d", time.localtime())
+    notice_day = str(raw.get("notice_day") or last_notice_date or today_key).strip() or today_key
+    if "notice_sent_today" in raw:
+        notice_sent_today = bool(raw.get("notice_sent_today"))
+    else:
+        notice_sent_today = last_notice_date == today_key
+    if notice_day != today_key:
+        notice_day = today_key
+        notice_sent_today = False
+    return {
+        "pending_notice": pending_notice,
+        "last_notice_date": last_notice_date,
+        "last_notice_mode": last_notice_mode,
+        "notice_day": notice_day,
+        "notice_sent_today": notice_sent_today,
+        "updated_at": max(0, coerce_int(raw.get("updated_at"), 0)),
+    }
+
+
+def save_system_runtime_state(data):
+    raw = data if isinstance(data, dict) else {}
+    pending_notice = str(raw.get("pending_notice") or "").strip().lower()
+    if pending_notice not in {"", "restart"}:
+        pending_notice = ""
+    last_notice_date = str(raw.get("last_notice_date") or "").strip()
+    last_notice_mode = str(raw.get("last_notice_mode") or "").strip().lower()
+    if last_notice_mode not in {"", "startup", "restart"}:
+        last_notice_mode = ""
+    today_key = time.strftime("%Y-%m-%d", time.localtime())
+    notice_day = str(raw.get("notice_day") or today_key).strip() or today_key
+    notice_sent_today = bool(raw.get("notice_sent_today"))
+    if notice_day != today_key:
+        notice_day = today_key
+        notice_sent_today = False
+    save_json_file(
+        SYSTEM_RUNTIME_FILE,
+        {
+            "pending_notice": pending_notice,
+            "last_notice_date": last_notice_date,
+            "last_notice_mode": last_notice_mode,
+            "notice_day": notice_day,
+            "notice_sent_today": notice_sent_today,
+            "updated_at": int(time.time()),
+        },
+    )
+
+
+def normalize_welcome_users_store(data):
+    raw = data if isinstance(data, dict) else {}
+    normalized = {}
+
+    # Backward compatibility: older format stored users directly at top level.
+    legacy_rows = {}
+    legacy_like = bool(raw)
+    for user_id, row in raw.items():
+        if not isinstance(row, dict):
+            legacy_like = False
+            break
+        if any(key in row for key in {"name", "message", "cooldown", "added_at", "set_by"}):
+            legacy_rows[str(user_id)] = row
+        else:
+            legacy_like = False
+            break
+
+    if legacy_like and legacy_rows:
+        raw = {"*": legacy_rows}
+
+    for chat_id, chat_rows in raw.items():
+        if not isinstance(chat_rows, dict):
+            continue
+        clean_rows = {}
+        for user_id, row in chat_rows.items():
+            if not isinstance(row, dict):
+                continue
+            name = str(row.get("name") or "User").strip() or "User"
+            message = str(row.get("message") or DEFAULT_WELCOME_COMMAND_TEMPLATE).strip() or DEFAULT_WELCOME_COMMAND_TEMPLATE
+            cooldown = max(1, coerce_int(row.get("cooldown"), 3600))
+            clean_rows[str(user_id)] = {
+                "name": name,
+                "message": message,
+                "cooldown": cooldown,
+                "added_at": max(0, coerce_int(row.get("added_at"), 0)),
+                "set_by": coerce_int(row.get("set_by"), 0),
+            }
+        if clean_rows:
+            normalized[str(chat_id)] = clean_rows
+
+    return normalized
+
+
+def get_chat_welcome_users(chat_id):
+    store = load_welcome_users()
+    merged = {}
+    merged.update(store.get("*", {}))
+    merged.update(store.get(str(chat_id), {}))
+    return merged
+
+
+def purge_welcome_user_state(user_id, chat_id=None):
+    store = load_welcome_users()
+    user_key = str(user_id)
+    removed = 0
+    target_keys = list(store.keys()) if chat_id is None else ["*", str(chat_id)]
+
+    for store_key in target_keys:
+        chat_rows = dict(store.get(store_key, {}))
+        if user_key in chat_rows:
+            chat_rows.pop(user_key, None)
+            removed += 1
+        if chat_rows:
+            store[store_key] = chat_rows
+        else:
+            store.pop(store_key, None)
+
+    save_welcome_users(store)
+    return removed
+
+
+def upsert_chat_welcome_user(chat_id, user_id, user_name, message, cooldown, set_by=0):
+    store = load_welcome_users()
+    chat_key = str(chat_id)
+    user_key = str(user_id)
+    chat_rows = dict(store.get(chat_key, {}))
+    chat_rows[user_key] = {
+        "name": str(user_name or "User").strip() or "User",
+        "message": str(message or DEFAULT_WELCOME_COMMAND_TEMPLATE).strip() or DEFAULT_WELCOME_COMMAND_TEMPLATE,
+        "cooldown": max(1, int(cooldown or 3600)),
+        "added_at": int(time.time()),
+        "set_by": coerce_int(set_by, 0),
+    }
+    store[chat_key] = chat_rows
+    save_welcome_users(store)
+
+
+def clear_chat_welcome_user(chat_id, user_id):
+    return bool(purge_welcome_user_state(user_id, chat_id=chat_id))
 
 
 def compact_log_text(text, limit=4000):
@@ -557,6 +762,12 @@ def default_user_data():
         "interaction_contexts": [],
         "tracked_messages": [],
         "temp_blocked_users": {},
+        "reply_check": {
+            "enabled_until": 0,
+            "started_at": 0,
+            "started_by": 0,
+            "recent_pairs": [],
+        },
     }
 
 
@@ -565,6 +776,129 @@ def coerce_int(value, default=0):
         return int(value)
     except (TypeError, ValueError):
         return default
+
+
+
+def get_dynamic_owner_id(chat_id):
+    snapshot = get_group_snapshot(chat_id)
+    return coerce_int(snapshot.get("dynamic_owner_id"), 0)
+
+
+def normalize_repeat_check_text(text):
+    cleaned = re.sub(r"[\W_]+", " ", str(text or "").lower(), flags=re.UNICODE)
+    return " ".join(cleaned.split()).strip()
+
+
+def is_reply_check_enabled(user_data, now=None):
+    now = int(time.time()) if now is None else int(now)
+    reply_check = user_data.get("reply_check", {})
+    return max(0, coerce_int(reply_check.get("enabled_until"), 0)) > now
+
+
+def build_reply_check_default():
+    return {
+        "enabled_until": 0,
+        "started_at": 0,
+        "started_by": 0,
+        "recent_pairs": [],
+    }
+
+
+def set_reply_check_state(chat_id, enabled, started_by=0):
+    user_data = load_user_data(chat_id)
+    if enabled:
+        now = int(time.time())
+        user_data["reply_check"] = {
+            "enabled_until": now + REPLY_CHECK_DURATION_SECONDS,
+            "started_at": now,
+            "started_by": coerce_int(started_by, 0),
+            "recent_pairs": [],
+        }
+    else:
+        user_data["reply_check"] = build_reply_check_default()
+    save_user_data(chat_id, user_data)
+
+
+def record_reply_check_pair(user_data, prompt_text, reply_text):
+    reply_check = dict(user_data.get("reply_check", build_reply_check_default()))
+    recent_pairs = list(reply_check.get("recent_pairs", []))
+    recent_pairs.append(
+        {
+            "prompt": str(prompt_text or "").strip(),
+            "reply": str(reply_text or "").strip(),
+            "created_at": int(time.time()),
+        }
+    )
+    reply_check["recent_pairs"] = recent_pairs[-REPLY_CHECK_RECENT_LIMIT:]
+    user_data["reply_check"] = reply_check
+
+
+def is_repeated_ai_reply(user_data, prompt_text, reply_text):
+    if not is_reply_check_enabled(user_data):
+        return False
+    normalized_reply = normalize_repeat_check_text(reply_text)
+    if len(normalized_reply.split()) < 5:
+        return False
+    normalized_prompt = normalize_repeat_check_text(extract_latest_user_question(prompt_text))
+    recent_pairs = list(user_data.get("reply_check", {}).get("recent_pairs", []))[-REPLY_CHECK_COMPARE_LIMIT:]
+    for row in recent_pairs:
+        recent_reply = normalize_repeat_check_text(row.get("reply"))
+        recent_prompt = normalize_repeat_check_text(extract_latest_user_question(row.get("prompt")))
+        if recent_reply and recent_reply == normalized_reply and recent_prompt != normalized_prompt:
+            return True
+    return False
+
+
+def build_repeat_recovery_message(lang_code):
+    messages = {
+        "hindi": "Thoda repeat ho raha tha, isliye main fresh tareeke se continue kar rahi hoon. Aap apni baat ek line me phir bhej do.",
+        "english": "That was starting to repeat, so I am resetting the flow. Send your point once more in one line.",
+        "hinglish": "Thoda repeat ho raha tha, isliye main fresh tareeke se continue kar rahi hoon. Aap apni baat ek line me phir bhej do.",
+        "brajbhasha": "थोरो repeat हो रहो थो, इसलिये मैं fresh ढंग सों continue कर रही हूँ। आप अपनी बात एक लाइन मैं फेर भेज दो।",
+    }
+    return finalize_language_reply(messages.get(lang_code, messages["hinglish"]), lang_code)
+
+
+def save_ai_reply_result(chat_id, prompt_text, reply_text, user_data=None):
+    user_data = load_user_data(chat_id) if user_data is None else normalize_user_data(user_data)
+    history = list(user_data.get("history", []))
+    history.append({"role": "user", "text": prompt_text})
+    history.append({"role": "assistant", "text": reply_text})
+    user_data["history"] = history[-30:]
+    if is_reply_check_enabled(user_data):
+        record_reply_check_pair(user_data, prompt_text, reply_text)
+    save_user_data(chat_id, user_data)
+
+
+
+def parse_time_to_seconds(text):
+    if not text:
+        return 3600  # default 1h
+
+    match = re.match(r"(\d+)([smhd])", text.lower())
+    if not match:
+        return 3600
+
+    value = int(match.group(1))
+    unit = match.group(2)
+
+    if unit == "s":
+        return value
+    if unit == "m":
+        return value * 60
+    if unit == "h":
+        return value * 3600
+    if unit == "d":
+        return value * 86400
+
+    return 3600
+
+
+
+
+
+
+
 
 
 def normalize_tracked_message_entry(item):
@@ -605,6 +939,20 @@ def normalize_interaction_context_entry(item):
         "target_name": str(item.get("target_name") or "").strip(),
         "caption_text": str(item.get("caption_text") or "").strip(),
         "summary": str(item.get("summary") or "").strip(),
+        "created_at": max(0, coerce_int(item.get("created_at"), 0)),
+    }
+
+
+def normalize_reply_check_entry(item):
+    if not isinstance(item, dict):
+        return None
+    prompt_text = str(item.get("prompt") or "").strip()
+    reply_text = str(item.get("reply") or "").strip()
+    if not prompt_text or not reply_text:
+        return None
+    return {
+        "prompt": prompt_text,
+        "reply": reply_text,
         "created_at": max(0, coerce_int(item.get("created_at"), 0)),
     }
 
@@ -679,6 +1027,23 @@ def normalize_user_data(data, now=None):
         if expiry_ts > now:
             blocked_users[str(user_id)] = expiry_ts
 
+    reply_check = {"enabled_until": 0, "started_at": 0, "started_by": 0, "recent_pairs": []}
+    raw_reply_check = raw.get("reply_check", {})
+    if isinstance(raw_reply_check, dict):
+        enabled_until = max(0, coerce_int(raw_reply_check.get("enabled_until"), 0))
+        if enabled_until > now:
+            reply_check["enabled_until"] = enabled_until
+            reply_check["started_at"] = max(0, coerce_int(raw_reply_check.get("started_at"), 0))
+            reply_check["started_by"] = coerce_int(raw_reply_check.get("started_by"), 0)
+            raw_recent_pairs = raw_reply_check.get("recent_pairs", [])
+            if isinstance(raw_recent_pairs, list):
+                recent_pairs = []
+                for item in raw_recent_pairs:
+                    normalized_item = normalize_reply_check_entry(item)
+                    if normalized_item:
+                        recent_pairs.append(normalized_item)
+                reply_check["recent_pairs"] = recent_pairs[-REPLY_CHECK_RECENT_LIMIT:]
+
     normalized.update({
         "lang": lang_code,
         "lang_set_at": lang_set_at,
@@ -687,6 +1052,7 @@ def normalize_user_data(data, now=None):
         "interaction_contexts": interaction_contexts[-INTERACTION_CONTEXT_LIMIT:],
         "tracked_messages": tracked_messages[-500:],
         "temp_blocked_users": blocked_users,
+        "reply_check": reply_check,
     })
     return normalized
 
@@ -786,10 +1152,24 @@ def normalize_mute_store(data, now=None):
     raw_groups = raw.get("groups", {})
     if not isinstance(raw_groups, dict):
         raw_groups = {}
-    for chat_id, expiry in raw_groups.items():
-        expiry_ts = coerce_int(expiry, 0)
+    for chat_id, row in raw_groups.items():
+        if isinstance(row, dict):
+            expiry_ts = coerce_int(row.get("expiry"), 0)
+            muted_by = coerce_int(row.get("muted_by"), 0)
+            muted_by_name = str(row.get("muted_by_name") or "").strip()
+            set_at = max(0, coerce_int(row.get("set_at"), 0))
+        else:
+            expiry_ts = coerce_int(row, 0)
+            muted_by = 0
+            muted_by_name = ""
+            set_at = 0
         if expiry_ts > now:
-            normalized["groups"][str(chat_id)] = expiry_ts
+            normalized["groups"][str(chat_id)] = {
+                "expiry": expiry_ts,
+                "muted_by": muted_by,
+                "muted_by_name": muted_by_name,
+                "set_at": set_at,
+            }
 
     raw_users = raw.get("users", {})
     if not isinstance(raw_users, dict):
@@ -798,10 +1178,27 @@ def normalize_mute_store(data, now=None):
         if not isinstance(chat_users, dict):
             continue
         active_users = {}
-        for user_id, expiry in chat_users.items():
-            expiry_ts = coerce_int(expiry, 0)
+        for user_id, row in chat_users.items():
+            if isinstance(row, dict):
+                expiry_ts = coerce_int(row.get("expiry"), 0)
+                muted_by = coerce_int(row.get("muted_by"), 0)
+                muted_by_name = str(row.get("muted_by_name") or "").strip()
+                target_name = str(row.get("target_name") or row.get("name") or "User").strip() or "User"
+                set_at = max(0, coerce_int(row.get("set_at"), 0))
+            else:
+                expiry_ts = coerce_int(row, 0)
+                muted_by = 0
+                muted_by_name = ""
+                target_name = "User"
+                set_at = 0
             if expiry_ts > now:
-                active_users[str(user_id)] = expiry_ts
+                active_users[str(user_id)] = {
+                    "expiry": expiry_ts,
+                    "muted_by": muted_by,
+                    "muted_by_name": muted_by_name,
+                    "target_name": target_name,
+                    "set_at": set_at,
+                }
         if active_users:
             normalized["users"][str(chat_id)] = active_users
 
@@ -873,6 +1270,10 @@ def normalize_group_audit_store(data):
             "status": "removed" if str(row.get("status") or "").lower() == "removed" else "active",
             "owner_id": coerce_int(row.get("owner_id"), None),
             "owner": str(row.get("owner") or "Owner"),
+            "static_owner_id": coerce_int(row.get("static_owner_id"), coerce_int(row.get("owner_id"), OWNER_ID)),
+            "static_owner": str(row.get("static_owner") or row.get("owner") or BOT_OWNER_NAME),
+            "dynamic_owner_id": coerce_int(row.get("dynamic_owner_id"), None),
+            "dynamic_owner": str(row.get("dynamic_owner") or "").strip(),
             "admin_ids": sorted(set(admin_ids)),
             "admins": admins,
             "members": max(0, coerce_int(row.get("members"), 0)),
@@ -1063,7 +1464,102 @@ def get_owner_override(chat_id):
     return get_owner_override_store().get(str(chat_id))
 
 
+def purge_dynamic_owner_state(chat_id=None, clear_override_store=True):
+    target_key = None if chat_id is None else str(chat_id)
+    removed_override = False
+    purged_welcome_entries = 0
+    owner_profile = load_static_owner_profile()
+
+    if clear_override_store:
+        store = get_owner_override_store()
+        if target_key is None:
+            removed_targets = [
+                (chat_key, coerce_int((row or {}).get("owner_id"), None))
+                for chat_key, row in store.items()
+                if isinstance(row, dict)
+            ]
+            removed_override = bool(store)
+            save_owner_override_store({})
+            for removed_chat_key, removed_user_id in removed_targets:
+                if removed_user_id:
+                    purged_welcome_entries += purge_welcome_user_state(removed_user_id, chat_id=removed_chat_key)
+        else:
+            removed_row = store.pop(target_key, None)
+            removed_override = removed_row is not None
+            save_owner_override_store(store)
+            removed_user_id = coerce_int((removed_row or {}).get("owner_id"), None)
+            if removed_user_id:
+                purged_welcome_entries += purge_welcome_user_state(removed_user_id, chat_id=target_key)
+
+    groups = normalize_group_store(load_json_file(GROUPS_FILE, {}))
+    groups_changed = False
+    for group_key, snapshot in groups.items():
+        if target_key is not None and str(group_key) != target_key:
+            continue
+        previous = (
+            snapshot.get("dynamic_owner_id"),
+            str(snapshot.get("dynamic_owner") or ""),
+            bool(snapshot.get("owner_override")),
+            snapshot.get("owner_id"),
+            str(snapshot.get("owner") or ""),
+        )
+        snapshot["owner_id"] = owner_profile["owner_id"]
+        snapshot["owner"] = BOT_OWNER_DISPLAY_NAME
+        snapshot["static_owner_id"] = owner_profile["owner_id"]
+        snapshot["static_owner"] = BOT_OWNER_DISPLAY_NAME
+        snapshot["dynamic_owner_id"] = None
+        snapshot["dynamic_owner"] = ""
+        snapshot["owner_override"] = False
+        current = (
+            snapshot.get("dynamic_owner_id"),
+            str(snapshot.get("dynamic_owner") or ""),
+            bool(snapshot.get("owner_override")),
+            snapshot.get("owner_id"),
+            str(snapshot.get("owner") or ""),
+        )
+        if current != previous:
+            groups_changed = True
+    if groups_changed:
+        save_json_file(GROUPS_FILE, groups)
+
+    audit_store = get_group_audit_store()
+    audit_changed = False
+    for audit_key, entry in audit_store.items():
+        if target_key is not None and str(audit_key) != target_key:
+            continue
+        previous = (
+            entry.get("dynamic_owner_id"),
+            str(entry.get("dynamic_owner") or ""),
+            entry.get("owner_id"),
+            str(entry.get("owner") or ""),
+        )
+        entry["owner_id"] = owner_profile["owner_id"]
+        entry["owner"] = owner_profile["owner_name"]
+        entry["static_owner_id"] = owner_profile["owner_id"]
+        entry["static_owner"] = owner_profile["owner_name"]
+        entry["dynamic_owner_id"] = None
+        entry["dynamic_owner"] = ""
+        current = (
+            entry.get("dynamic_owner_id"),
+            str(entry.get("dynamic_owner") or ""),
+            entry.get("owner_id"),
+            str(entry.get("owner") or ""),
+        )
+        if current != previous:
+            audit_changed = True
+    if audit_changed:
+        save_group_audit_store(audit_store)
+
+    if target_key is None:
+        ADMIN_CACHE.clear()
+    else:
+        ADMIN_CACHE.pop(coerce_int(target_key, 0), None)
+
+    return removed_override or groups_changed or audit_changed or bool(purged_welcome_entries)
+
+
 def set_owner_override(chat_id, owner_id, owner_name, set_by):
+    purge_dynamic_owner_state(chat_id, clear_override_store=False)
     store = get_owner_override_store()
     store[str(chat_id)] = {
         "owner_id": int(owner_id),
@@ -1079,26 +1575,82 @@ def clear_owner_override(chat_id):
     store = get_owner_override_store()
     removed = store.pop(str(chat_id), None)
     save_owner_override_store(store)
-    ADMIN_CACHE.pop(chat_id, None)
+    removed_user_id = coerce_int((removed or {}).get("owner_id"), None)
+    if removed_user_id:
+        purge_welcome_user_state(removed_user_id, chat_id=chat_id)
+    purge_dynamic_owner_state(chat_id, clear_override_store=False)
     return bool(removed)
 
 
 def is_set_owner_developer(user_id):
-    return int(user_id or 0) == DEVELOPER_COMMAND_USER_ID
+    return int(user_id or 0) == OWNER_ID
+
+
+def is_primary_owner(user_id):
+    return int(user_id or 0) == OWNER_ID
 
 
 def apply_owner_override_to_snapshot(chat_id, snapshot):
-    if not snapshot:
-        return snapshot
+    result = dict(snapshot or {})
+    result["chat_id"] = coerce_int(result.get("chat_id"), coerce_int(chat_id, 0))
+    result["title"] = str(result.get("title") or result["chat_id"])
+    result["members"] = max(0, coerce_int(result.get("members"), 0))
+    result["updated_at"] = max(0, coerce_int(result.get("updated_at"), 0))
+    raw_admin_ids = result.get("admin_ids", [])
+    if not isinstance(raw_admin_ids, list):
+        raw_admin_ids = []
+    admin_ids = []
+    for admin_id in raw_admin_ids:
+        normalized_admin_id = coerce_int(admin_id, None)
+        if normalized_admin_id is not None:
+            admin_ids.append(normalized_admin_id)
+    result["admin_ids"] = sorted(set(admin_ids))
+    raw_admins = result.get("admins", [])
+    if not isinstance(raw_admins, list):
+        raw_admins = []
+    result["admins"] = [str(name).strip() for name in raw_admins if str(name).strip()]
+    result["telegram_owner_id"] = coerce_int(result.get("owner_id"), None)
+    result["telegram_owner"] = str(result.get("owner") or "Owner")
+    result["owner_id"] = OWNER_ID
+    result["owner"] = BOT_OWNER_DISPLAY_NAME
+    result["static_owner_id"] = OWNER_ID
+    result["static_owner"] = BOT_OWNER_DISPLAY_NAME
+
     override = get_owner_override(chat_id)
-    result = dict(snapshot)
     if override:
-        result["owner_id"] = override.get("owner_id")
-        result["owner"] = override.get("owner_name") or result.get("owner") or "Owner"
+        result["dynamic_owner_id"] = coerce_int(override.get("owner_id"), None)
+        result["dynamic_owner"] = str(override.get("owner_name") or "Owner").strip() or "Owner"
         result["owner_override"] = True
     else:
+        result["dynamic_owner_id"] = None
+        result["dynamic_owner"] = ""
         result["owner_override"] = False
     return result
+
+
+def get_owner_summary_values(snapshot):
+    snapshot = snapshot or {}
+    owner_profile = load_static_owner_profile()
+    dynamic_owner_id = coerce_int(snapshot.get("dynamic_owner_id"), None)
+    dynamic_owner_name = str(snapshot.get("dynamic_owner") or "").strip()
+    return {
+        "static_name": owner_profile["owner_name"],
+        "static_id": owner_profile["owner_id"],
+        "dynamic_name": dynamic_owner_name or "Not set",
+        "dynamic_id": dynamic_owner_id,
+    }
+
+
+def get_owner_question_context(chat_id):
+    owner_profile = load_static_owner_profile()
+    override = get_owner_override(chat_id)
+    dynamic_owner_name = str((override or {}).get("owner_name") or "").strip()
+    return {
+        "dynamic_owner_name": dynamic_owner_name or "Not set",
+        "has_dynamic_owner": bool(dynamic_owner_name),
+        "main_owner_name": owner_profile["owner_name"],
+        "developer_name": owner_profile["developer_name"],
+    }
 
 
 def is_current_static_owner(chat_id, user_id):
@@ -1178,6 +1730,10 @@ def upsert_group_audit_entry(chat_id, updates):
         "status": existing.get("status") or "active",
         "owner_id": existing.get("owner_id"),
         "owner": existing.get("owner") or "Owner",
+        "static_owner_id": coerce_int(existing.get("static_owner_id"), coerce_int(existing.get("owner_id"), OWNER_ID)),
+        "static_owner": existing.get("static_owner") or existing.get("owner") or BOT_OWNER_NAME,
+        "dynamic_owner_id": existing.get("dynamic_owner_id"),
+        "dynamic_owner": existing.get("dynamic_owner") or "",
         "admin_ids": list(existing.get("admin_ids", [])),
         "admins": list(existing.get("admins", [])),
         "members": max(0, coerce_int(existing.get("members"), 0)),
@@ -1212,13 +1768,18 @@ def get_actor_display_name(user):
 def update_group_audit_from_snapshot(snapshot):
     if not snapshot:
         return
+    owner_values = get_owner_summary_values(snapshot)
     upsert_group_audit_entry(
         snapshot.get("chat_id"),
         {
             "title": str(snapshot.get("title") or snapshot.get("chat_id")),
             "status": "active",
-            "owner_id": snapshot.get("owner_id"),
-            "owner": str(snapshot.get("owner") or "Owner"),
+            "owner_id": owner_values["static_id"],
+            "owner": owner_values["static_name"],
+            "static_owner_id": owner_values["static_id"],
+            "static_owner": owner_values["static_name"],
+            "dynamic_owner_id": owner_values["dynamic_id"],
+            "dynamic_owner": "" if owner_values["dynamic_id"] is None else owner_values["dynamic_name"],
             "admin_ids": list(snapshot.get("admin_ids", [])),
             "admins": list(snapshot.get("admins", [])),
             "members": max(0, coerce_int(snapshot.get("members"), 0)),
@@ -1278,11 +1839,19 @@ def build_member_welcome_message(member_name, chat_title):
 
 def build_owner_return_message(owner_name):
     safe_name = escape_markdown_text(owner_name or "Owner")
-    return (
-        f"👑 Welcome back *{safe_name}*\\! 💫\n"
-        "💖 Kaafi der baad aap aaye ho, group aur Aira dono khush hain.\n"
-        "🌷 Main yahin hun, kuchh chahiye ho to bata do."
-    )
+    return DEFAULT_WELCOME_COMMAND_TEMPLATE.format(name=safe_name)
+
+
+def is_default_welcome_command_template(message):
+    return str(message or "").strip() == DEFAULT_WELCOME_COMMAND_TEMPLATE
+
+
+def render_custom_welcome_message(message, user_name):
+    base_message = str(message or DEFAULT_WELCOME_COMMAND_TEMPLATE).strip() or DEFAULT_WELCOME_COMMAND_TEMPLATE
+    if is_default_welcome_command_template(base_message):
+        return build_owner_return_message(user_name)
+    rendered_text = base_message.format(name=user_name) if "{name}" in base_message else f"{base_message} {user_name}".strip()
+    return escape_markdown_text(rendered_text)
 
 
 def build_owner_changed_message(chat_title, previous_owner_name, new_owner_name):
@@ -1387,11 +1956,11 @@ def has_global_group_admin_access(user_id):
     user_id_int = coerce_int(user_id, 0)
     if not user_id_int:
         return False
-    if user_id_int in {OWNER_ID, DEVELOPER_COMMAND_USER_ID}:
+    if is_primary_owner(user_id_int):
         return True
     groups = normalize_group_store(load_json_file(GROUPS_FILE, {}))
-    for snapshot in groups.values():
-        if user_id_int == coerce_int(snapshot.get("owner_id"), 0):
+    for chat_id, snapshot in groups.items():
+        if is_current_static_owner(chat_id, user_id_int):
             return True
         if user_id_int in {coerce_int(admin_id, 0) for admin_id in snapshot.get("admin_ids", [])}:
             return True
@@ -1443,14 +2012,38 @@ def maybe_send_owner_return_welcome(chat, user):
     user_id = (user or {}).get("id")
     if chat_id is None or user_id in (None, 0):
         return
-    if not is_owner(chat_id, user_id):
-        return
-    last_seen, _ = note_user_presence(chat_id, user_id)
+    last_seen, now = note_user_presence(chat_id, user_id)
     if not last_seen:
         return
-    if int(time.time()) - last_seen < OWNER_RETURN_WELCOME_SECONDS:
+    if is_group_muted(chat_id) or is_user_muted(chat_id, user_id):
         return
-    send_message(chat_id, build_owner_return_message(get_user_display_name(user)))
+    is_owner_user = is_owner(chat_id, user_id)
+    user_name = get_user_display_name(user)
+    owner_welcome_text = build_owner_return_message(user_name)
+    user_data = get_chat_welcome_users(chat_id).get(str(user_id))
+    if user_data:
+        cooldown = max(1, coerce_int(user_data.get("cooldown"), 3600))
+        if (now - last_seen) < cooldown:
+            return
+        message = str(user_data.get("message") or DEFAULT_WELCOME_COMMAND_TEMPLATE).strip() or DEFAULT_WELCOME_COMMAND_TEMPLATE
+        custom_welcome_text = render_custom_welcome_message(message, user_name)
+        if is_owner_user:
+            if is_default_welcome_command_template(message):
+                send_message(chat_id, owner_welcome_text)
+            else:
+                send_message(chat_id, f"{owner_welcome_text}\n\n{custom_welcome_text}")
+        else:
+            send_message(chat_id, custom_welcome_text)
+        return
+
+    if not is_owner_user:
+        return
+    if (now - last_seen) < OWNER_RETURN_WELCOME_SECONDS:
+        return
+    send_message(chat_id, owner_welcome_text)
+
+
+
 
 
 def maybe_send_daily_greetings():
@@ -1511,7 +2104,7 @@ def build_all_group_view_paragraphs():
             merged["removed_by_id"] = audit_entry.get("removed_by_id")
             merged["removed_by_name"] = audit_entry.get("removed_by_name", "")
             merged["removed_at"] = audit_entry.get("removed_at", 0)
-            active_entries.append(merged)
+            active_entries.append(apply_owner_override_to_snapshot(active_snapshot.get("chat_id"), merged))
         elif audit_entry:
             removed_entries.append(audit_entry)
 
@@ -1532,6 +2125,7 @@ def build_all_group_view_paragraphs():
     if active_entries:
         active_entries.sort(key=lambda row: (str(row.get("title") or "").lower(), row.get("chat_id") or 0))
         for index, entry in enumerate(active_entries, start=1):
+            owner_values = get_owner_summary_values(entry)
             admin_names = ", ".join(entry.get("admins", [])) or "No admins found"
             actor_name = entry.get("added_by_name") or "Not recorded"
             actor_id = entry.get("added_by_id")
@@ -1543,13 +2137,18 @@ def build_all_group_view_paragraphs():
             promoter_line = escape_markdown_text(promoter_name)
             if promoter_id:
                 promoter_line += f" \\(`{promoter_id}`\\)"
+            dynamic_owner_line = escape_markdown_text(owner_values["dynamic_name"]) if owner_values["dynamic_id"] else "Not set"
+            dynamic_owner_id_line = f"`{owner_values['dynamic_id']}`" if owner_values["dynamic_id"] else "Not set"
             paragraphs.append(
                 "\n".join(
                     [
                         f"🟢 **Active Group {index}**",
                         f"📛 Group: {escape_markdown_text(str(entry.get('title') or entry.get('chat_id')))}",
                         f"🆔 Chat ID: `{entry.get('chat_id')}`",
-                        f"👑 Owner: {escape_markdown_text(str(entry.get('owner') or 'Owner'))}",
+                        f"👑 Static/Main Owner: {escape_markdown_text(owner_values['static_name'])}",
+                        f"🆔 Static/Main Owner ID: `{owner_values['static_id']}`",
+                        f"⚡ Dynamic Owner: {dynamic_owner_line}",
+                        f"🆔 Dynamic Owner ID: {dynamic_owner_id_line}",
                         f"🛡 Admin Count: `{len(entry.get('admin_ids', []))}`",
                         f"🧑‍✈️ Admins: {escape_markdown_text(admin_names)}",
                         f"👥 Members: `{max(0, coerce_int(entry.get('members'), 0))}`",
@@ -1566,19 +2165,25 @@ def build_all_group_view_paragraphs():
     if removed_entries:
         removed_entries.sort(key=lambda row: row.get("removed_at") or 0, reverse=True)
         for index, entry in enumerate(removed_entries, start=1):
+            owner_values = get_owner_summary_values(entry)
             remover_name = entry.get("removed_by_name") or "Not recorded"
             remover_id = entry.get("removed_by_id")
             remover_line = escape_markdown_text(remover_name)
             if remover_id:
                 remover_line += f" \\(`{remover_id}`\\)"
             admin_names = ", ".join(entry.get("admins", [])) or "No admins saved"
+            dynamic_owner_line = escape_markdown_text(owner_values["dynamic_name"]) if owner_values["dynamic_id"] else "Not set"
+            dynamic_owner_id_line = f"`{owner_values['dynamic_id']}`" if owner_values["dynamic_id"] else "Not set"
             paragraphs.append(
                 "\n".join(
                     [
                         f"💔 **Removed Group {index}**",
                         f"📛 Group: {escape_markdown_text(str(entry.get('title') or entry.get('chat_id')))}",
                         f"🆔 Chat ID: `{entry.get('chat_id')}`",
-                        f"👑 Last Owner: {escape_markdown_text(str(entry.get('owner') or 'Owner'))}",
+                        f"👑 Static/Main Owner: {escape_markdown_text(owner_values['static_name'])}",
+                        f"🆔 Static/Main Owner ID: `{owner_values['static_id']}`",
+                        f"⚡ Last Dynamic Owner: {dynamic_owner_line}",
+                        f"🆔 Last Dynamic Owner ID: {dynamic_owner_id_line}",
                         f"🛡 Last Admins: {escape_markdown_text(admin_names)}",
                         f"👥 Last Member Count: `{max(0, coerce_int(entry.get('members'), 0))}`",
                         f"➕ Added By: {escape_markdown_text(entry.get('added_by_name') or 'Not recorded')}",
@@ -1686,6 +2291,121 @@ def send_animation_message(chat_id, animation_url, caption, reply_to_message_id=
     except Exception as e:
         print(f"Animation Send Error: {e}")
         return {}
+
+
+def send_voice_message(chat_id, voice_file_id, caption="", reply_to_message_id=None, track_kind="bot_voice"):
+    payload = {
+        "chat_id": chat_id,
+        "voice": voice_file_id,
+    }
+    if caption:
+        payload["caption"] = caption
+        payload["parse_mode"] = "Markdown"
+    if reply_to_message_id:
+        payload["reply_to_message_id"] = reply_to_message_id
+    try:
+        data = telegram_api_json("POST", "sendVoice", payload=payload, timeout=20)
+        result_message = data.get("result", {}) or {}
+        message_id = result_message.get("message_id")
+        if data.get("ok") and message_id:
+            track_message(chat_id, message_id, 0, track_kind)
+            record_message_audit_entry(result_message)
+        return data
+    except Exception as e:
+        print(f"Voice Send Error: {e}")
+        return {}
+
+
+def send_audio_message(chat_id, audio_file_id, caption="", reply_to_message_id=None, track_kind="bot_audio"):
+    payload = {
+        "chat_id": chat_id,
+        "audio": audio_file_id,
+    }
+    if caption:
+        payload["caption"] = caption
+        payload["parse_mode"] = "Markdown"
+    if reply_to_message_id:
+        payload["reply_to_message_id"] = reply_to_message_id
+    try:
+        data = telegram_api_json("POST", "sendAudio", payload=payload, timeout=20)
+        result_message = data.get("result", {}) or {}
+        message_id = result_message.get("message_id")
+        if data.get("ok") and message_id:
+            track_message(chat_id, message_id, 0, track_kind)
+            record_message_audit_entry(result_message)
+        return data
+    except Exception as e:
+        print(f"Audio Send Error: {e}")
+        return {}
+
+
+def create_broadcast_invite_link(chat_id):
+    link_name = time.strftime("Aira %d %b %H:%M", time.localtime())[:32]
+    try:
+        data = telegram_api_json(
+            "POST",
+            "createChatInviteLink",
+            payload={"chat_id": chat_id, "name": link_name},
+            timeout=10,
+            retries=2,
+        )
+        if data.get("ok"):
+            return str((data.get("result") or {}).get("invite_link") or "").strip()
+    except Exception as e:
+        print(f"Invite Link Error ({chat_id}): {e}", flush=True)
+    return ""
+
+
+def parse_broadcast_mode(argument_text):
+    clean_text = (argument_text or "").strip()
+    if not clean_text:
+        return "message", ""
+    parts = clean_text.split(maxsplit=1)
+    mode = parts[0].lower()
+    if mode in {"message", "voice", "link"}:
+        return mode, parts[1].strip() if len(parts) > 1 else ""
+    return "message", clean_text
+
+
+def get_broadcast_media_source(reply_to):
+    reply_to = reply_to or {}
+    voice = reply_to.get("voice") or {}
+    if voice.get("file_id"):
+        return {"method": "voice", "file_id": voice.get("file_id")}
+    audio = reply_to.get("audio") or {}
+    if audio.get("file_id"):
+        return {"method": "audio", "file_id": audio.get("file_id")}
+    return {}
+
+
+def build_broadcast_join_text(invite_link):
+    if invite_link:
+        return f"🔗 Join Link:\n{invite_link}"
+    return "🔗 Join Link:\nInvite link unavailable right now."
+
+
+def build_broadcast_text(message_text, invite_link=""):
+    body = (
+        "🚨🚨 SYSTEM ALERT 🚨🚨\n\n"
+        "⚠️ IMPORTANT UPDATE\n"
+        "👉 READ NOW @All"
+    )
+    if message_text:
+        body += f"\n\n{message_text}"
+    body += f"\n\n{build_broadcast_join_text(invite_link)}"
+    return body
+
+
+def build_broadcast_caption(message_text, invite_link=""):
+    caption = build_broadcast_text(message_text, invite_link)
+    if len(caption) <= 1024:
+        return caption
+    base_caption = build_broadcast_text("", invite_link)
+    available = max(0, 1024 - len(base_caption) - 5)
+    trimmed_message = (message_text or "")[:available].rstrip()
+    if trimmed_message and len(trimmed_message) < len(message_text or ""):
+        trimmed_message = f"{trimmed_message}..."
+    return build_broadcast_text(trimmed_message, invite_link)[:1024]
 
 
 def send_temporary_message(chat_id, text, delay_seconds=POLICY_DELETE_SECONDS):
@@ -1872,6 +2592,148 @@ def build_start_text(display_name):
         "• ✨ A Safe & Smooth Experience\n\n"
         "✦ **Choose An Option Below :**"
     )
+
+
+def send_start_panel(chat_id, display_name):
+    loading = send_message(chat_id, "✨ Loading Aira...", track_kind="bot_text")
+    loading_id = loading.get("result", {}).get("message_id")
+    if loading_id:
+        time.sleep(0.6)
+        edit_message(chat_id, loading_id, "💫 Preparing your AI panel...")
+        time.sleep(0.8)
+        edit_message(chat_id, loading_id, build_start_text(display_name), reply_markup=get_start_panel_keyboard())
+        return
+    send_message(chat_id, build_start_text(display_name), reply_markup=get_start_panel_keyboard())
+
+
+def maybe_send_auto_start_panel():
+    global AUTO_START_PANEL_SENT
+    if AUTO_START_PANEL_SENT:
+        return
+    AUTO_START_PANEL_SENT = True
+    try:
+        send_start_panel(OWNER_ID, BOT_OWNER_NAME or "Owner")
+        print(f"Auto /start panel sent to owner chat {OWNER_ID}.", flush=True)
+    except Exception as e:
+        print(f"Auto /start panel failed: {e}", flush=True)
+
+
+def get_runtime_day_key(ts=None):
+    return time.strftime("%Y-%m-%d", time.localtime(time.time() if ts is None else ts))
+
+
+def mark_pending_system_notice(mode):
+    mode_text = str(mode or "").strip().lower()
+    if mode_text != "restart":
+        mode_text = ""
+    state = load_system_runtime_state()
+    state["pending_notice"] = mode_text
+    save_system_runtime_state(state)
+
+
+def consume_pending_system_notice():
+    state = load_system_runtime_state()
+    mode = "restart" if state.get("pending_notice") == "restart" else "startup"
+    state["pending_notice"] = ""
+    state["notice_day"] = get_runtime_day_key()
+    if not has_sent_system_notice_today(state):
+        state["notice_sent_today"] = False
+    save_system_runtime_state(state)
+    return mode
+
+
+def has_sent_system_notice_today(state=None):
+    state = load_system_runtime_state() if state is None else state
+    today_key = get_runtime_day_key()
+    return (
+        str(state.get("notice_day") or "").strip() == today_key
+        and bool(state.get("notice_sent_today"))
+    )
+
+
+def mark_system_notice_sent(mode):
+    mode_text = str(mode or "").strip().lower()
+    if mode_text not in {"startup", "restart"}:
+        mode_text = "startup"
+    state = load_system_runtime_state()
+    state["notice_day"] = get_runtime_day_key()
+    state["notice_sent_today"] = True
+    state["last_notice_date"] = get_runtime_day_key()
+    state["last_notice_mode"] = mode_text
+    save_system_runtime_state(state)
+
+
+def build_system_group_notice(mode):
+    if str(mode or "").strip().lower() == "restart":
+        return (
+            "**System Restart Notice**\n"
+            "Aira has restarted successfully.\n"
+            "System is now restarted and back online.\n"
+            "All core services are running normally again."
+        )
+    return (
+        "**System Start Notice**\n"
+        "Aira is now online.\n"
+        "New features or updates are now available in the system.\n"
+        "All services are ready to use."
+    )
+
+
+def send_system_notice_to_all_groups(mode):
+    groups = normalize_group_store(load_json_file(GROUPS_FILE, {}))
+    if not groups:
+        return {"sent": 0, "failed": 0, "mode": mode}
+
+    notice_text = build_system_group_notice(mode)
+    delivered = 0
+    failed = 0
+    lock = threading.Lock()
+
+    def send_notice(group_id):
+        nonlocal delivered, failed
+        chat_id = int(group_id)
+        data = send_message(chat_id, notice_text, track_kind="bot_system_notice")
+        with lock:
+            if data.get("ok"):
+                delivered += 1
+            else:
+                failed += 1
+
+    threads = []
+    for group_id in sorted(groups.keys(), key=lambda value: coerce_int(value, 0)):
+        thread = threading.Thread(target=send_notice, args=(group_id,))
+        thread.start()
+        threads.append(thread)
+
+    for thread in threads:
+        thread.join()
+
+    return {"sent": delivered, "failed": failed, "mode": mode}
+
+
+def maybe_send_auto_system_notice():
+    global AUTO_SYSTEM_NOTICE_SENT
+    if AUTO_SYSTEM_NOTICE_SENT:
+        return
+    AUTO_SYSTEM_NOTICE_SENT = True
+    try:
+        mode = consume_pending_system_notice()
+        runtime_state = load_system_runtime_state()
+        if has_sent_system_notice_today(runtime_state):
+            print(
+                f"Auto system notice skipped. already_sent_on={runtime_state.get('last_notice_date')} mode={runtime_state.get('last_notice_mode') or 'startup'}",
+                flush=True,
+            )
+            return
+        summary = send_system_notice_to_all_groups(mode)
+        if summary.get("sent", 0) > 0:
+            mark_system_notice_sent(mode)
+        print(
+            f"Auto system notice sent. mode={summary.get('mode')} sent={summary.get('sent')} failed={summary.get('failed')}",
+            flush=True,
+        )
+    except Exception as e:
+        print(f"Auto system notice failed: {e}", flush=True)
 
 
 def get_gf_style_patterns():
@@ -2163,8 +3025,6 @@ def get_user_display_name(user):
 def get_styled_known_owner_name(display_name, user_id=None):
     if user_id is not None and int(user_id) == OWNER_ID:
         return BOT_OWNER_DISPLAY_NAME
-    if (display_name or "").strip().lower() == BOT_OWNER_NAME.lower():
-        return BOT_OWNER_DISPLAY_NAME
     return display_name or "User"
 
 
@@ -2177,7 +3037,9 @@ def sync_admin_state(chat_id, force=False):
     previous_audit = get_group_audit_entry(chat_id)
     admins = get_admin_members(chat_id)
     if not admins:
-        return apply_owner_override_to_snapshot(chat_id, cached["data"]) if cached else None
+        if cached:
+            return apply_owner_override_to_snapshot(chat_id, cached["data"])
+        return apply_owner_override_to_snapshot(chat_id, {"chat_id": chat_id, "title": str(chat_id)})
 
     owner_id = None
     owner_name = "Owner"
@@ -2208,10 +3070,11 @@ def sync_admin_state(chat_id, force=False):
         "members": get_chat_member_count(chat_id),
         "updated_at": int(now),
     }
-    ADMIN_CACHE[chat_id] = {"ts": now, "data": snapshot}
+    effective_snapshot = apply_owner_override_to_snapshot(chat_id, snapshot)
+    ADMIN_CACHE[chat_id] = {"ts": now, "data": effective_snapshot}
 
     groups = normalize_group_store(load_json_file(GROUPS_FILE, {}))
-    groups[str(chat_id)] = snapshot
+    groups[str(chat_id)] = effective_snapshot
     save_json_file(GROUPS_FILE, groups)
 
     title_store = normalize_title_store(load_json_file(ADMIN_TITLES_FILE, {}))
@@ -2228,17 +3091,17 @@ def sync_admin_state(chat_id, force=False):
         item_store[str(chat_id)] = filtered_items
         save_json_file(ITEMS_FILE, item_store)
 
-    effective_snapshot = apply_owner_override_to_snapshot(chat_id, snapshot)
-    previous_owner_id = coerce_int(previous_audit.get("owner_id"), None)
-    current_owner_id = coerce_int(effective_snapshot.get("owner_id"), None)
+    previous_owner_id = coerce_int(previous_audit.get("dynamic_owner_id"), None)
+    current_owner_id = coerce_int(effective_snapshot.get("dynamic_owner_id"), None)
     owner_changed = (
+        bool(get_owner_override(chat_id))
+        and
         previous_audit
         and previous_audit.get("status") == "active"
-        and previous_owner_id is not None
-        and current_owner_id is not None
         and previous_owner_id != current_owner_id
+        and (previous_owner_id is not None or current_owner_id is not None)
     )
-    previous_owner_name = str(previous_audit.get("owner") or "Owner")
+    previous_owner_name = str(previous_audit.get("dynamic_owner") or "Owner")
     update_group_audit_from_snapshot(effective_snapshot)
     if owner_changed:
         send_message(
@@ -2246,7 +3109,7 @@ def sync_admin_state(chat_id, force=False):
             build_owner_changed_message(
                 str(effective_snapshot.get("title") or chat_id),
                 previous_owner_name,
-                str(effective_snapshot.get("owner") or "Owner"),
+                str(effective_snapshot.get("dynamic_owner") or "Owner"),
             ),
         )
     return effective_snapshot
@@ -2257,16 +3120,26 @@ def get_group_snapshot(chat_id, force=False):
     if snapshot:
         return snapshot
     groups = normalize_group_store(load_json_file(GROUPS_FILE, {}))
-    return apply_owner_override_to_snapshot(chat_id, groups.get(str(chat_id), {}))
+    stored_snapshot = groups.get(
+        str(chat_id),
+        {
+            "chat_id": chat_id,
+            "title": str(chat_id),
+            "owner_id": OWNER_ID,
+            "owner": BOT_OWNER_DISPLAY_NAME,
+            "admin_ids": [],
+            "admins": [],
+            "members": 0,
+            "updated_at": 0,
+        },
+    )
+    return apply_owner_override_to_snapshot(chat_id, stored_snapshot)
 
 
 def is_owner(chat_id, user_id):
     if user_id in (None, 0):
         return False
-    if int(user_id) == OWNER_ID:
-        return True
-    snapshot = get_group_snapshot(chat_id)
-    return int(user_id) == int(snapshot.get("owner_id") or -1)
+    return is_primary_owner(user_id) or is_current_static_owner(chat_id, user_id)
 
 
 def is_admin(chat_id, user_id):
@@ -2378,11 +3251,17 @@ def get_group_summary_text(chat_id):
     snapshot = get_group_snapshot(chat_id, force=True)
     if not snapshot:
         return "Group info not available."
+    owner_values = get_owner_summary_values(snapshot)
     admins = ", ".join(snapshot.get("admins", [])) or "No admins found"
+    dynamic_owner_name = escape_markdown_text(owner_values["dynamic_name"]) if owner_values["dynamic_id"] else "Not set"
+    dynamic_owner_id = f"`{owner_values['dynamic_id']}`" if owner_values["dynamic_id"] else "Not set"
     return (
         f"Group: {snapshot.get('title', chat_id)}\n"
         f"Group ID: `{snapshot.get('chat_id', chat_id)}`\n"
-        f"Owner: {snapshot.get('owner', 'Owner')}\n"
+        f"Static Main Owner: {escape_markdown_text(owner_values['static_name'])}\n"
+        f"Static Main Owner ID: `{owner_values['static_id']}`\n"
+        f"Dynamic Owner: {dynamic_owner_name}\n"
+        f"Dynamic Owner ID: {dynamic_owner_id}\n"
         f"Admins: {admins}\n"
         f"Members: {snapshot.get('members', 0)}"
     )
@@ -2395,10 +3274,16 @@ def get_all_groups_summary():
     lines = []
     for raw_info in groups.values():
         info = apply_owner_override_to_snapshot(raw_info.get("chat_id"), raw_info)
+        owner_values = get_owner_summary_values(info)
+        dynamic_owner_name = escape_markdown_text(owner_values["dynamic_name"]) if owner_values["dynamic_id"] else "Not set"
+        dynamic_owner_id = f"`{owner_values['dynamic_id']}`" if owner_values["dynamic_id"] else "Not set"
         lines.append(
             f"{info.get('title', 'Group')}\n"
             f"ID: `{info.get('chat_id')}`\n"
-            f"Owner: {info.get('owner', 'Owner')}\n"
+            f"Static Main Owner: {escape_markdown_text(owner_values['static_name'])}\n"
+            f"Static Main Owner ID: `{owner_values['static_id']}`\n"
+            f"Dynamic Owner: {dynamic_owner_name}\n"
+            f"Dynamic Owner ID: {dynamic_owner_id}\n"
             f"Admins: {', '.join(info.get('admins', [])) or 'No admins'}\n"
             f"Members: {info.get('members', 0)}"
         )
@@ -2623,12 +3508,58 @@ def get_mute_store():
 
 
 def save_mute_store(data):
-    save_json_file(MUTE_STATE_FILE, data)
+    save_json_file(MUTE_STATE_FILE, normalize_mute_store(data))
 
 
-def set_group_mute(chat_id, seconds):
+def get_group_mute_entry(chat_id):
     store = get_mute_store()
-    store["groups"][str(chat_id)] = int(time.time()) + seconds
+    row = store.get("groups", {}).get(str(chat_id))
+    if not row:
+        return None
+    expiry = coerce_int((row or {}).get("expiry"), 0)
+    if not expiry:
+        store.get("groups", {}).pop(str(chat_id), None)
+        save_mute_store(store)
+        return None
+    if time.time() >= expiry:
+        store.get("groups", {}).pop(str(chat_id), None)
+        save_mute_store(store)
+        return None
+    return row
+
+
+def get_user_mute_entry(chat_id, user_id):
+    store = get_mute_store()
+    chat_key = str(chat_id)
+    user_key = str(user_id)
+    chat_users = store.get("users", {}).get(chat_key, {})
+    row = chat_users.get(user_key)
+    if not row:
+        return None
+    expiry = coerce_int((row or {}).get("expiry"), 0)
+    if not expiry:
+        chat_users.pop(user_key, None)
+        if not chat_users:
+            store.get("users", {}).pop(chat_key, None)
+        save_mute_store(store)
+        return None
+    if time.time() >= expiry:
+        chat_users.pop(user_key, None)
+        if not chat_users:
+            store.get("users", {}).pop(chat_key, None)
+        save_mute_store(store)
+        return None
+    return row
+
+
+def set_group_mute(chat_id, seconds, muted_by=0, muted_by_name=""):
+    store = get_mute_store()
+    store["groups"][str(chat_id)] = {
+        "expiry": int(time.time()) + seconds,
+        "muted_by": coerce_int(muted_by, 0),
+        "muted_by_name": str(muted_by_name or "").strip(),
+        "set_at": int(time.time()),
+    }
     save_mute_store(store)
 
 
@@ -2639,43 +3570,43 @@ def clear_group_mute(chat_id):
 
 
 def is_group_muted(chat_id):
-    store = get_mute_store()
-    expiry = store.get("groups", {}).get(str(chat_id))
-    if not expiry:
-        return False
-    if time.time() >= expiry:
-        store["groups"].pop(str(chat_id), None)
-        save_mute_store(store)
-        return False
-    return True
+    return bool(get_group_mute_entry(chat_id))
 
 
-def set_user_mute(chat_id, user_id, seconds):
+def set_user_mute(chat_id, user_id, seconds, muted_by=0, muted_by_name="", target_name=""):
     store = get_mute_store()
-    store["users"].setdefault(str(chat_id), {})[str(user_id)] = int(time.time()) + seconds
+    store["users"].setdefault(str(chat_id), {})[str(user_id)] = {
+        "expiry": int(time.time()) + seconds,
+        "muted_by": coerce_int(muted_by, 0),
+        "muted_by_name": str(muted_by_name or "").strip(),
+        "target_name": str(target_name or "User").strip() or "User",
+        "set_at": int(time.time()),
+    }
     save_mute_store(store)
 
 
 def clear_user_mute(chat_id, user_id):
     store = get_mute_store()
-    chat_users = store.get("users", {}).get(str(chat_id), {})
+    chat_key = str(chat_id)
+    chat_users = store.get("users", {}).get(chat_key, {})
     if str(user_id) in chat_users:
         chat_users.pop(str(user_id), None)
+        if not chat_users:
+            store.get("users", {}).pop(chat_key, None)
         save_mute_store(store)
         return True
     return False
 
 
 def is_user_muted(chat_id, user_id):
-    store = get_mute_store()
-    chat_users = store.get("users", {}).get(str(chat_id), {})
-    expiry = chat_users.get(str(user_id))
-    if not expiry:
+    return bool(get_user_mute_entry(chat_id, user_id))
+
+
+def suppress_muted_user_message(chat_id, user_id, message_id):
+    if not get_user_mute_entry(chat_id, user_id):
         return False
-    if time.time() >= expiry:
-        chat_users.pop(str(user_id), None)
-        save_mute_store(store)
-        return False
+    if message_id:
+        delete_message(chat_id, message_id)
     return True
 
 
@@ -2765,6 +3696,8 @@ def get_show_commands_text():
     return (
         "Main Features:\n"
         "/start /help /about_ai /lan /reset /show\n"
+        "/welcomes /welcome_list\n"
+        "/check\n"
         "/block /unblock /mute /unmute /ban /pin /unpin\n"
         "/title /setowne /translate /purge /sdelete\n"
         "/items /group /stats /update /broadcast /full_clear /restart /delete\n\n"
@@ -2871,42 +3804,57 @@ def extract_latest_user_question(prompt_text):
     return text
 
 
-def get_static_reply(prompt_text, lang_code):
+def get_static_reply(chat_id, prompt_text, lang_code):
     latest_question = extract_latest_user_question(prompt_text)
     text = " ".join(latest_question.lower().split())
+    owner_context = get_owner_question_context(chat_id)
+    dynamic_owner_name = owner_context["dynamic_owner_name"]
+    main_owner_name = owner_context["main_owner_name"]
+    developer_name = owner_context["developer_name"]
+
+    dynamic_owner_hinglish = (
+        f"Is chat ka current dynamic owner {dynamic_owner_name} hai. "
+        if owner_context["has_dynamic_owner"]
+        else "Is chat me abhi koi dynamic owner set nahi hai. "
+    )
+    dynamic_owner_english = (
+        f"The current dynamic owner for this chat is {dynamic_owner_name}. "
+        if owner_context["has_dynamic_owner"]
+        else "There is no dynamic owner set for this chat right now. "
+    )
 
     if DEVELOPER_QUESTION_RE.search(text):
         replies = {
-            "hindi": f"Mujhe {BOT_DEVELOPER_DISPLAY_NAME} ne banaya hai.",
-            "english": f"I was created by {BOT_DEVELOPER_DISPLAY_NAME}.",
-            "hinglish": f"Mujhe {BOT_DEVELOPER_DISPLAY_NAME} ne banaya hai.",
-            "sanskrit": f"मां {BOT_DEVELOPER_DISPLAY_NAME} द्वारा निर्मिता अस्मि।",
-            "russian": f"Меня создал {BOT_DEVELOPER_DISPLAY_NAME}.",
-            "brajbhasha": f"मौका {BOT_DEVELOPER_DISPLAY_NAME} ने बनायो है।",
-            "telugu": f"నన్ను {BOT_DEVELOPER_DISPLAY_NAME} రూపొందించారు.",
-            "tamil": f"என்னை {BOT_DEVELOPER_DISPLAY_NAME} உருவாக்கினார்.",
-            "gujarati": f"મને {BOT_DEVELOPER_DISPLAY_NAME} એ બનાવ્યો છે.",
-            "marathi": f"मला {BOT_DEVELOPER_DISPLAY_NAME} यांनी तयार केले आहे.",
+            "hindi": f"{dynamic_owner_hinglish}Mujhe {developer_name} ne banaya hai. Mere permanent main owner bhi {main_owner_name} hi hain.",
+            "english": f"{dynamic_owner_english}I was created by {developer_name}. My permanent main owner is {main_owner_name}.",
+            "hinglish": f"{dynamic_owner_hinglish}Mujhe {developer_name} ne banaya hai. Mera permanent main owner bhi {main_owner_name} hi hai.",
+            "sanskrit": f"मम dynamic owner वर्तमाने {dynamic_owner_name if owner_context['has_dynamic_owner'] else 'निर्धारितः नास्ति'}। मां {developer_name} द्वारा निर्मिता अस्मि।",
+            "russian": f"Текущий динамический владелец этого чата: {dynamic_owner_name}. Меня создал {developer_name}. Постоянный главный владелец: {main_owner_name}.",
+            "brajbhasha": f"{'यै chat को current dynamic owner ' + dynamic_owner_name + ' है। ' if owner_context['has_dynamic_owner'] else 'यै chat मैं अभी dynamic owner set नाहीं है। '}मौका {developer_name} ने बनायो है। मेरो permanent main owner {main_owner_name} है।",
+            "telugu": f"ఈ చాట్‌కు current dynamic owner {dynamic_owner_name}. నన్ను {developer_name} రూపొందించారు. నా permanent main owner {main_owner_name}.",
+            "tamil": f"இந்த chat-க்கு current dynamic owner {dynamic_owner_name}. என்னை {developer_name} உருவாக்கினார். என் permanent main owner {main_owner_name}.",
+            "gujarati": f"આ chat નો current dynamic owner {dynamic_owner_name}. મને {developer_name} એ બનાવ્યો છે. મારો permanent main owner {main_owner_name} છે.",
+            "marathi": f"या chat साठी current dynamic owner {dynamic_owner_name}. मला {developer_name} यांनी तयार केले आहे. माझे permanent main owner {main_owner_name} आहेत.",
         }
-        return finalize_language_reply(replies.get(lang_code, f"Mujhe {BOT_DEVELOPER_DISPLAY_NAME} ne banaya hai."), lang_code)
+        return finalize_language_reply(replies.get(lang_code, f"{dynamic_owner_hinglish}Mujhe {developer_name} ne banaya hai. Mera permanent main owner {main_owner_name} hai."), lang_code)
 
     if CREATED_WHEN_QUESTION_RE.search(text):
         replies = {
-            "hindi": f"Mere paas exact creation date saved nahi hai, lekin mujhe {BOT_DEVELOPER_DISPLAY_NAME} ne develop kiya hai.",
-            "english": f"I do not have an exact stored creation date, but I was developed by {BOT_DEVELOPER_DISPLAY_NAME}.",
-            "hinglish": f"Mere paas exact creation date saved nahi hai, lekin mujhe {BOT_DEVELOPER_DISPLAY_NAME} ne develop kiya hai.",
-            "brajbhasha": f"मौका ठीक बनायो गयो दिन संग्रहीत नाहीं, पर मौका {BOT_DEVELOPER_DISPLAY_NAME} ने बनायो है।",
+            "hindi": f"{dynamic_owner_hinglish}Mere paas exact creation date saved nahi hai, lekin mujhe {developer_name} ne develop kiya hai. Permanent main owner {main_owner_name} hai.",
+            "english": f"{dynamic_owner_english}I do not have an exact stored creation date, but I was developed by {developer_name}. My permanent main owner is {main_owner_name}.",
+            "hinglish": f"{dynamic_owner_hinglish}Mere paas exact creation date saved nahi hai, lekin mujhe {developer_name} ne develop kiya hai. Permanent main owner {main_owner_name} hai.",
+            "brajbhasha": f"{'यै chat को current dynamic owner ' + dynamic_owner_name + ' है। ' if owner_context['has_dynamic_owner'] else 'यै chat मैं अभी dynamic owner set नाहीं है। '}मौका ठीक बनायो गयो दिन संग्रहीत नाहीं, पर मौका {developer_name} ने बनायो है। Permanent main owner {main_owner_name} है।",
         }
-        return finalize_language_reply(replies.get(lang_code, f"Mere paas exact creation date saved nahi hai, lekin mujhe {BOT_DEVELOPER_DISPLAY_NAME} ne develop kiya hai."), lang_code)
+        return finalize_language_reply(replies.get(lang_code, f"{dynamic_owner_hinglish}Mere paas exact creation date saved nahi hai, lekin mujhe {developer_name} ne develop kiya hai. Permanent main owner {main_owner_name} hai."), lang_code)
 
     if OWNER_QUESTION_RE.search(text):
         replies = {
-            "hindi": f"{BOT_OWNER_DISPLAY_LINE}\nGroup ka current owner live group data se dekha jata hai.",
-            "english": f"{BOT_OWNER_DISPLAY_LINE}\nThe group owner still comes from live group data.",
-            "hinglish": f"{BOT_OWNER_DISPLAY_LINE}\nGroup ka current owner live group data se aata hai.",
-            "brajbhasha": f"{BOT_OWNER_DISPLAY_LINE}\nGroup को current owner live group data सों आवै है।",
+            "hindi": f"Current dynamic owner: {dynamic_owner_name}\nPermanent main owner: {main_owner_name}\nDeveloper: {developer_name}",
+            "english": f"Current dynamic owner: {dynamic_owner_name}\nPermanent main owner: {main_owner_name}\nDeveloper: {developer_name}",
+            "hinglish": f"Current dynamic owner: {dynamic_owner_name}\nPermanent main owner: {main_owner_name}\nDeveloper: {developer_name}",
+            "brajbhasha": f"Current dynamic owner: {dynamic_owner_name}\nPermanent main owner: {main_owner_name}\nDeveloper: {developer_name}",
         }
-        return finalize_language_reply(replies.get(lang_code, BOT_OWNER_DISPLAY_LINE), lang_code)
+        return finalize_language_reply(replies.get(lang_code, f"Current dynamic owner: {dynamic_owner_name}\nPermanent main owner: {main_owner_name}\nDeveloper: {developer_name}"), lang_code)
 
     if ADMIN_QUESTION_RE.search(text):
         replies = {
@@ -2976,16 +3924,16 @@ def request_nvidia_reply(payload):
     return None, " | ".join(errors)
 
 
-def ask_ai(chat_id, user_id, prompt_text):
+def ask_ai(chat_id, user_id, prompt_text, *, save_history=True, extra_retry_note="", temperature=0.5):
     user_data = load_user_data(chat_id)
     lang_code = get_active_language(chat_id, user_id)
     latest_question = extract_latest_user_question(prompt_text)
 
-    if is_name_question(latest_question):
+    if not extra_retry_note and is_name_question(latest_question):
         return finalize_language_reply(NAME_REPLIES.get(lang_code, "My name is Aira."), lang_code)
     #if lang_code == "brajbhasha" and is_simple_greeting(latest_question):
         #return finalize_language_reply("जय श्री राधे राधे। कैसो हाल है?", lang_code)
-    static_reply = get_static_reply(prompt_text, lang_code)
+    static_reply = get_static_reply(chat_id, prompt_text, lang_code) if not extra_retry_note else None
     if static_reply:
         return static_reply
 
@@ -2996,9 +3944,12 @@ def ask_ai(chat_id, user_id, prompt_text):
         text = item.get("text", "").strip()
         if role in {"user", "assistant"} and text:
             messages.append({"role": role, "content": text})
-    messages.append({"role": "user", "content": build_user_prompt(user_id, lang_code, prompt_text)})
+    user_prompt = build_user_prompt(user_id, lang_code, prompt_text)
+    if extra_retry_note:
+        user_prompt += f"\nAdditional anti-repeat instruction: {extra_retry_note}"
+    messages.append({"role": "user", "content": user_prompt})
 
-    payload = {"model": NVIDIA_MODEL, "messages": messages, "temperature": 0.5, "stream": False}
+    payload = {"model": NVIDIA_MODEL, "messages": messages, "temperature": temperature, "stream": False}
 
     ai_reply, error_details = request_nvidia_reply(payload)
     if not ai_reply:
@@ -3007,11 +3958,44 @@ def ask_ai(chat_id, user_id, prompt_text):
         return "⚠️ All NVIDIA APIs are busy or failed. Please try again."
     reply = finalize_language_reply(ai_reply, lang_code)
 
-    history.append({"role": "user", "text": prompt_text})
-    history.append({"role": "assistant", "text": reply})
-    user_data["history"] = history[-30:]
-    save_user_data(chat_id, user_data)
+    if save_history:
+        save_ai_reply_result(chat_id, prompt_text, reply, user_data=user_data)
     return reply
+
+
+def get_checked_ai_reply(chat_id, user_id, prompt_text):
+    user_data = load_user_data(chat_id)
+    if not is_reply_check_enabled(user_data):
+        return ask_ai(chat_id, user_id, prompt_text)
+    lang_code = get_active_language(chat_id, user_id)
+    latest_question = extract_latest_user_question(prompt_text)
+    if is_name_question(latest_question) or get_static_reply(chat_id, prompt_text, lang_code):
+        return ask_ai(chat_id, user_id, prompt_text)
+
+    first_reply = ask_ai(chat_id, user_id, prompt_text, save_history=False)
+    final_reply = first_reply
+
+    if is_repeated_ai_reply(user_data, prompt_text, first_reply):
+        retry_note = (
+            "Your previous draft repeated an older assistant reply from this chat. "
+            "Forget that repeated wording/topic and answer freshly. "
+            f"Do not reuse this repeated draft: {first_reply}"
+        )
+        retry_reply = ask_ai(
+            chat_id,
+            user_id,
+            prompt_text,
+            save_history=False,
+            extra_retry_note=retry_note,
+            temperature=0.8,
+        )
+        if retry_reply and not is_repeated_ai_reply(user_data, prompt_text, retry_reply):
+            final_reply = retry_reply
+        else:
+            final_reply = build_repeat_recovery_message(get_active_language(chat_id, user_id))
+
+    save_ai_reply_result(chat_id, prompt_text, final_reply, user_data=user_data)
+    return final_reply
 
 
 def detect_reaction_for_text(text):
@@ -3388,6 +4372,7 @@ def send_interaction_command_response(msg, command_name):
 
 def request_restart():
     global RESTART_REQUESTED
+    mark_pending_system_notice("restart")
     RESTART_REQUESTED = True
 
 
@@ -3546,6 +4531,14 @@ def process_message(msg):
         except Exception:
             pass
 
+    if (
+        chat_type in {"group", "supergroup"}
+        and user_id not in (None, 0)
+        and not from_user.get("is_bot")
+        and suppress_muted_user_message(chat_id, user_id, msg.get("message_id"))
+    ):
+        return
+
 
 
 
@@ -3603,16 +4596,7 @@ def process_message(msg):
             f"[start-debug] chat={chat_id} user_id={user_id} from_user={from_user} sender_chat={msg.get('sender_chat')} chosen_name={start_name!r}",
             flush=True,
         )
-        loading = send_message(chat_id, "✨ Loading Aira...", track_kind="bot_text")
-        loading_id = loading.get("result", {}).get("message_id")
-        if loading_id:
-            time.sleep(0.6)
-            edit_message(chat_id, loading_id, "💫 Preparing your AI panel...")
-            time.sleep(0.8)
-            edit_message(chat_id, loading_id, build_start_text(start_name), reply_markup=get_start_panel_keyboard())
-        else:
-            send_message(chat_id, build_start_text(start_name), reply_markup=get_start_panel_keyboard())
-        #send_message(chat_id, "Main menu enabled below.", reply_markup=get_main_menu_keyboard(), track_kind="bot_text")
+        send_start_panel(chat_id, start_name)
         return
 
     if text == "🗣 Change Language" or command == "/lan":
@@ -3662,10 +4646,15 @@ def process_message(msg):
             "`/reset chat` = AI memory clear\n"
             "`/reset messages` = tracked messages delete\n"
             "`/reset all` = memory + tracked messages clear\n"
-            "Reply + `/setowne` = static owner set shortcut\n"
-            "`/setowne reset` = static owner clear shortcut\n"
+            "Reply + `/setowne` = dynamic owner set shortcut\n"
+            "`/setowne reset` = dynamic owner clear shortcut\n"
             "`/allgroup` = owner-only all groups audit view\n"
             "`/setOwner` aur `/allGroupView` bhi kaam karte hain\n"
+            "Reply + `/welcomes 2h hello` = static/dynamic owner auto welcome toggle\n"
+            "`/check` = repeated message handle monitor, 30 min toggle\n"
+            "`/broadcast message ...` = text broadcast with join link\n"
+            "Reply + `/broadcast voice ...` = voice broadcast with join link\n"
+            "`/broadcast link ...` = join-link broadcast\n"
             "`/restart` = owner-only full program restart\n"
             "`/purge 50` = last 50 messages delete\n"
             "`/purge links` = tracked link messages delete\n"
@@ -3690,6 +4679,104 @@ def process_message(msg):
     if command == "/show":
         send_message(chat_id, get_show_commands_text())
         return
+
+
+    if command == "/welcomes":
+        if chat_type not in {"group", "supergroup"}:
+            send_message(chat_id, "Use /welcomes only in a group.")
+            return
+        if not is_owner(chat_id, user_id):
+            send_message(chat_id, "❌ Only static or dynamic owner can use this command.")
+            return
+
+        reply_to = msg.get("reply_to_message")
+        if not reply_to:
+            send_message(chat_id, "⚠️ Reply to a user message with `/welcomes`.")
+            return
+
+        target = reply_to.get("from", {})
+        target_id = target.get("id")
+        if not target_id or target.get("is_bot"):
+            send_message(chat_id, "Reply to a real user.")
+            return
+        if not has_admin_access(chat_id, target_id):
+            send_message(chat_id, "This command is only for owner/admin users.")
+            return
+
+        argument_text = get_command_argument(text)
+        time_text = None
+        custom_msg = DEFAULT_WELCOME_COMMAND_TEMPLATE
+
+        if argument_text:
+            parts = argument_text.split(maxsplit=1)
+            if re.fullmatch(r"\d+[smhd]", parts[0].lower()):
+                time_text = parts[0]
+                if len(parts) == 2 and parts[1].strip():
+                    custom_msg = parts[1].strip()
+            else:
+                custom_msg = argument_text.strip() or custom_msg
+
+        seconds = parse_time_to_seconds(time_text)
+        target_name = get_user_display_name(target)
+
+        if clear_chat_welcome_user(chat_id, target_id):
+            send_message(chat_id, f"❌ Welcome OFF for {target_name}")
+            return
+
+        upsert_chat_welcome_user(chat_id, target_id, target_name, custom_msg, seconds, set_by=user_id)
+        owner_note = ""
+        if is_owner(chat_id, target_id):
+            if is_default_welcome_command_template(custom_msg):
+                owner_note = "\n👑 This welcome now uses the same built-in owner welcome style."
+            else:
+                owner_note = "\n👑 Owner default welcome message will also be added when this welcome triggers."
+        send_message(
+            chat_id,
+            (
+                f"✅ Welcome ON for {target_name}\n"
+                f"⏱ Time: `{seconds}` seconds\n"
+                f"💬 Message: {escape_markdown_text(custom_msg)}"
+                f"{owner_note}"
+            ),
+        )
+        return
+
+    if command == "/welcome_list":
+        data = get_chat_welcome_users(chat_id)
+
+        if not data:
+            send_message(chat_id, "📭 No welcome users set in this group.")
+            return
+
+        lines = ["🌟 Welcome Users List:\n"]
+        for uid, info in sorted(data.items(), key=lambda item: (str(item[1].get("name") or "").lower(), item[0])):
+            lines.append(
+                f"👤 {escape_markdown_text(info.get('name') or 'User')} (`{uid}`)\n"
+                f"⏱ `{max(1, coerce_int(info.get('cooldown'), 3600))}` seconds\n"
+                f"💬 {escape_markdown_text(info.get('message') or DEFAULT_WELCOME_COMMAND_TEMPLATE)}\n"
+            )
+
+        send_message(chat_id, "\n".join(lines))
+        return
+
+    if command == "/check":
+        can_manage_reply_check = chat_type == "private" or actor_has_admin_access
+        if not can_manage_reply_check:
+            send_message(chat_id, "Only admin or owner can use /check.")
+            return
+        user_data = load_user_data(chat_id)
+        if is_reply_check_enabled(user_data):
+            set_reply_check_state(chat_id, False, started_by=user_id)
+            send_message(chat_id, "🛑 Repeat check OFF.\nYe command repeated message handle karna band kar diya hai for this chat.")
+            return
+        set_reply_check_state(chat_id, True, started_by=user_id)
+        send_message(chat_id, "✅ Repeat check ON.\nYe command repeated message handle karta hai.\nAira next `30 minutes` tak recent repeated AI replies ko watch karegi.")
+        return
+
+
+
+
+
 
     if command == "/id":
         chat_title = chat.get("title") or chat.get("first_name") or "Private Chat"
@@ -3754,8 +4841,8 @@ def process_message(msg):
         return
 
     if command in {"/allgroupview", "/allgroup"}:
-        if coerce_int(user_id, 0) not in {OWNER_ID, DEVELOPER_COMMAND_USER_ID}:
-            send_message(chat_id, "Only owner can use /allgroup.")
+        if not is_owner(chat_id, user_id):
+            send_message(chat_id, "Only static or dynamic owner can use /allgroup.")
             return
         send_markdown_pages(chat_id, build_all_group_view_paragraphs())
         return
@@ -3766,14 +4853,14 @@ def process_message(msg):
 
     if command == "/stats":
         if not is_owner(chat_id, user_id):
-            send_message(chat_id, "Only owner can use /stats.")
+            send_message(chat_id, "Only static or dynamic owner can use /stats.")
             return
         send_message(chat_id, get_stats_text())
         return
 
     if command == "/update":
         if not is_owner(chat_id, user_id):
-            send_message(chat_id, "Only owner can use /update.")
+            send_message(chat_id, "Only static or dynamic owner can use /update.")
             return
         send_message(chat_id, "Force updating bot JSON files...")
         summary = run_json_update_cycle(
@@ -3787,37 +4874,46 @@ def process_message(msg):
 
     if command == "/broadcast":
         if not is_owner(chat_id, user_id):
-            send_message(chat_id, "Only owner can use /broadcast.")
+            send_message(chat_id, "Only static or dynamic owner can use /broadcast.")
             return
 
-        message_text = get_command_argument(text)
-        if not message_text:
-            send_message(chat_id, "Use /broadcast your message")
+        reply_to = msg.get("reply_to_message")
+        broadcast_mode, message_text = parse_broadcast_mode(get_command_argument(text))
+        media_source = {}
+        if broadcast_mode == "voice":
+            media_source = get_broadcast_media_source(reply_to)
+            if not media_source:
+                send_message(chat_id, "Reply to a voice or audio message with `/broadcast voice your text`.")
+                return
+        elif broadcast_mode == "message" and not message_text:
+            send_message(chat_id, "Use `/broadcast message your text` or `reply + /broadcast voice your text` or `/broadcast link your text`.")
             return
 
         groups = normalize_group_store(load_json_file(GROUPS_FILE, {}))
 
         delivered = 0
+        linked = 0
+        failed = 0
         lock = threading.Lock()
 
         def send_broadcast(group_id):
-            nonlocal delivered
+            nonlocal delivered, linked, failed
             group_id = int(group_id)
-
-            mention_text = f"""
-                🚨🚨 SYSTEM ALERT 🚨🚨
-
-        ⚠️ IMPORTANT UPDATE
-        👉 READ NOW @All
-
-                {message_text}
-                """
+            invite_link = create_broadcast_invite_link(group_id)
 
             for attempt in range(3):  # 🔁 retry system
-                msg = send_message(group_id, mention_text)
+                if broadcast_mode == "voice":
+                    caption = build_broadcast_caption(message_text, invite_link)
+                    if media_source.get("method") == "audio":
+                        msg_data = send_audio_message(group_id, media_source.get("file_id"), caption, track_kind="bot_broadcast")
+                    else:
+                        msg_data = send_voice_message(group_id, media_source.get("file_id"), caption, track_kind="bot_broadcast")
+                else:
+                    mention_text = build_broadcast_text(message_text, invite_link)
+                    msg_data = send_message(group_id, mention_text, track_kind="bot_broadcast")
 
-                if msg.get("ok"):
-                    msg_id = msg["result"]["message_id"]
+                if msg_data.get("ok"):
+                    msg_id = msg_data["result"]["message_id"]
 
                     try:
                         pin_message(group_id, msg_id)  # 📌 auto pin
@@ -3826,10 +4922,15 @@ def process_message(msg):
 
                     with lock:
                         delivered += 1
+                        if invite_link:
+                            linked += 1
 
                     return
 
                 time.sleep(1)  # retry delay
+
+            with lock:
+                failed += 1
 
         threads = []
 
@@ -3841,38 +4942,47 @@ def process_message(msg):
         for t in threads:
             t.join()
 
-        send_message(chat_id, f"🚀 Broadcast sent to {delivered} chats.")
+        send_message(
+            chat_id,
+            f"🚀 Broadcast mode: `{broadcast_mode}`\n"
+            f"✅ Sent to: `{delivered}` chats\n"
+            f"🔗 Join links added: `{linked}` chats\n"
+            f"❌ Failed: `{failed}` chats"
+        )
 
     if command in {"/setowner", "/setowne"}:
         reply_to = msg.get("reply_to_message")
         set_owner_arg = get_command_argument(text).strip().lower()
-        developer_can_set_owner = is_set_owner_developer(user_id)
-        current_static_owner_can_reset = is_current_static_owner(chat_id, user_id)
+        owner_can_manage_dynamic_owner = is_owner(chat_id, user_id)
 
         if chat_type not in {"group", "supergroup"}:
             send_message(chat_id, "Use /setowne only in a group.")
             return
 
         if set_owner_arg == "reset":
-            if reply_to and not developer_can_set_owner:
-                send_message(chat_id, "Only developer can use this command.")
-                return
             if reply_to:
                 send_message(chat_id, "Use `/setowne reset` without replying to any message.")
                 return
-            if not (developer_can_set_owner or current_static_owner_can_reset):
-                send_message(chat_id, "Only developer or current static owner can use /setowne reset.")
+            if not owner_can_manage_dynamic_owner:
+                send_message(chat_id, "Only static or dynamic owner can use /setowne reset.")
                 return
             if not clear_owner_override(chat_id):
-                send_message(chat_id, "No static owner is set for this group.")
+                send_message(chat_id, "No dynamic owner is set for this group.")
                 return
             snapshot = get_group_snapshot(chat_id, force=True)
-            owner_name = escape_markdown_text(str(snapshot.get("owner") or "Owner"))
-            send_message(chat_id, f"Static owner reset complete.\nCurrent owner: {owner_name}")
+            owner_values = get_owner_summary_values(snapshot)
+            send_message(
+                chat_id,
+                (
+                    "Dynamic owner reset complete.\n"
+                    f"Static Main Owner: {escape_markdown_text(owner_values['static_name'])}\n"
+                    f"Static Main Owner ID: `{owner_values['static_id']}`"
+                ),
+            )
             return
 
-        if not developer_can_set_owner:
-            send_message(chat_id, "Only developer can use this command.")
+        if not owner_can_manage_dynamic_owner:
+            send_message(chat_id, "Only static or dynamic owner can use /setowne.")
             return
         if not reply_to:
             send_message(chat_id, "Reply to a user's message with `/setowne` or use `/setowne reset`.")
@@ -3884,11 +4994,38 @@ def process_message(msg):
             send_message(chat_id, "Reply to a real user's message.")
             return
 
+        existing_override = get_owner_override(chat_id)
+        existing_owner_id = coerce_int((existing_override or {}).get("owner_id"), None)
+        existing_owner_name = str((existing_override or {}).get("owner_name") or "Owner").strip() or "Owner"
+        if existing_owner_id and existing_owner_id != int(target_user_id):
+            send_message(
+                chat_id,
+                (
+                    "Only one dynamic owner can be active at a time.\n"
+                    f"Current dynamic owner: {escape_markdown_text(existing_owner_name)}\n"
+                    "Reset the current dynamic owner first, then set a new one."
+                ),
+            )
+            return
+        if existing_owner_id and existing_owner_id == int(target_user_id):
+            send_message(chat_id, f"{escape_markdown_text(existing_owner_name)} is already the active dynamic owner for this group.")
+            return
+
         target_owner_name = get_user_display_name(target_user) or "Owner"
         set_owner_override(chat_id, target_user_id, target_owner_name, user_id)
         snapshot = get_group_snapshot(chat_id, force=True)
-        owner_name = escape_markdown_text(str(snapshot.get("owner") or target_owner_name))
-        send_message(chat_id, f"Static owner set to {owner_name}.\nOwner ID: `{target_user_id}`")
+        owner_values = get_owner_summary_values(snapshot)
+        dynamic_owner_name = escape_markdown_text(owner_values["dynamic_name"]) if owner_values["dynamic_id"] else escape_markdown_text(target_owner_name)
+        dynamic_owner_id = owner_values["dynamic_id"] or int(target_user_id)
+        send_message(
+            chat_id,
+            (
+                f"Dynamic owner set to: {dynamic_owner_name}\n"
+                f"Dynamic Owner ID: `{dynamic_owner_id}`\n"
+                f"Static Main Owner: {escape_markdown_text(owner_values['static_name'])}\n"
+                f"Static Main Owner ID: `{owner_values['static_id']}`"
+            ),
+        )
         return
 
     if command == "/title":
@@ -3931,10 +5068,10 @@ def process_message(msg):
         return
 
     if command == "/restart":
-        if not is_owner(chat_id, user_id):
-            send_message(chat_id, "Only owner can restart the server.")
+        if not is_primary_owner(user_id):
+            send_message(chat_id, "Only main bot owner can restart the server.")
             return
-        send_message(chat_id, "Restarting server...")
+        send_message(chat_id, "♻️ Restarting server...")
         request_restart()
         return
 
@@ -3948,6 +5085,7 @@ def process_message(msg):
     if command == "/mute":
         seconds = parse_duration_to_seconds(get_command_argument(text))
         reply_to = msg.get("reply_to_message")
+        actor_name = get_user_display_name(from_user) or "User"
         if not seconds:
             send_message(chat_id, "Use /mute 2m or /mute 1h or /mute 2d")
             return
@@ -3960,14 +5098,28 @@ def process_message(msg):
             if is_owner(chat_id, target_user_id):
                 send_message(chat_id, "Can't mute owner.")
                 return
-            set_user_mute(chat_id, target_user_id, seconds)
+            set_user_mute(
+                chat_id,
+                target_user_id,
+                seconds,
+                muted_by=user_id,
+                muted_by_name=actor_name,
+                target_name=get_user_display_name(target_user),
+            )
             send_message(chat_id, f"{get_user_display_name(target_user)} muted for {get_command_argument(text)}.")
             return
         if is_owner(chat_id, user_id) and chat_type in {"group", "supergroup"}:
-            set_group_mute(chat_id, seconds)
+            set_group_mute(chat_id, seconds, muted_by=user_id, muted_by_name=actor_name)
             send_message(chat_id, f"Group AI muted for {get_command_argument(text)}.")
             return
-        set_user_mute(chat_id, user_id, seconds)
+        set_user_mute(
+            chat_id,
+            user_id,
+            seconds,
+            muted_by=user_id,
+            muted_by_name=actor_name,
+            target_name=actor_name,
+        )
         send_message(chat_id, f"You are muted for {get_command_argument(text)}.")
         return
 
@@ -4131,9 +5283,9 @@ def process_message(msg):
         if keyword_reaction:
             send_reaction(chat_id, msg["message_id"], keyword_reaction)
 
-    if is_group_muted(chat_id) and not actor_has_admin_access:
+    if is_group_muted(chat_id):
         return
-    if is_user_muted(chat_id, user_id) and not actor_has_admin_access:
+    if is_user_muted(chat_id, user_id):
         return
 
     reply_prompt = extract_reply_prompt(msg)
@@ -4143,7 +5295,7 @@ def process_message(msg):
         return
 
     send_typing(chat_id)
-    reply = ask_ai(chat_id, user_id, bot_prompt)
+    reply = get_checked_ai_reply(chat_id, user_id, bot_prompt)
     if direct_prompt and not reply_prompt:
         reply = format_direct_call_reply(chat_id, from_user, reply)
     if reply.strip() in REACTION_EMOJIS:
@@ -4207,6 +5359,7 @@ def build_command_objects(command_names):
         "unblock": "Unblock user",
         "mute": "Mute user/group",
         "unmute": "Unmute user/group",
+        "check": "30m anti-repeat",
         "ban": "Ban user",
         "pin": "Pin message",
         "unpin": "Unpin messages",
@@ -4259,6 +5412,7 @@ def register_commands():
         "help",
         "about_ai",
         "reset",
+        "check",
         "block",
         "unblock",
         "mute",
@@ -4266,11 +5420,11 @@ def register_commands():
         "ban",
         "pin",
         "unpin",
-        "title",
+        "allgroup",
         "setowne",
-        "id",
         "translate",
         "purge",
+        "broadcast",
         "restart",
         "show",
     ]
@@ -4282,6 +5436,7 @@ def register_commands():
         "help",
         "about_ai",
         "reset",
+        "check",
         "clear_chat",
         "block",
         "unblock",
@@ -4325,10 +5480,14 @@ def register_commands():
 def run_bot():
     offset = 0
     print("✅ Bot Started with App UI...", flush=True)
+    if purge_dynamic_owner_state():
+        print("Dynamic owner state cleared on startup.", flush=True)
     register_commands()
     startup_summary = run_json_update_cycle(trigger="startup", force=True)
     if startup_summary.get("skipped"):
         print("Startup JSON self update skipped.", flush=True)
+    maybe_send_auto_start_panel()
+    maybe_send_auto_system_notice()
     threading.Thread(target=json_self_update_loop, daemon=True).start()
     threading.Thread(target=scheduled_greeting_loop, daemon=True).start()
 
@@ -4359,6 +5518,8 @@ def run_bot():
 
 
 if __name__ == "__main__":
+    if not acquire_instance_lock():
+        sys.exit(0)
     migrate_message_audit_dirs()
     threading.Thread(target=message_audit_writer_loop, daemon=True).start()
     threading.Thread(target=cleanup_loop, daemon=True).start()

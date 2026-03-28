@@ -2,8 +2,8 @@
   "-1003437441526": {
     "chat_id": -1003437441526,
     "title": "༒•EᒪITEᔕᗯOᖇᒪᗪ•༒",
-    "owner_id": 8227738491,
-    "owner": "𝗞𝗔𝗡𝗛𝗔",
+    "owner_id": 6198299684,
+    "owner": "✨ 👑 **Gauri Shankar** ✨",
     "admin_ids": [
       7198401614,
       7540306306,
@@ -13,33 +13,53 @@
       8158965259,
       8211404225,
       8227738491,
+      8328583715,
       8379869647,
-      8535821757,
-      8555321364,
       8699636212,
       8728597550
     ],
     "admins": [
+      "Aira ai",
       "𝒔𝒏𝒐𝒘𝒚",
       "✨ Ꭵᴛs•ᴇVaaN",
-      "Aira ai",
+      "toji",
       "ℙ𝕚𝕩𝕚𝕖<3",
       "Aᴋᴀɴᴇ Kᴜʀᴏᴋᴀᴡᴀ 🦋",
-      "✨ 👑 **Gauri Shankar** ✨",
-      "Ꭲɪɢᴇʀ™⁰⁰⁷ 🚩",
+      "Gauri Shankar",
       "̶̶z̶ade",
-      "❄️Amane Fujimiya",
+      "卂爪卂几乇 千ㄩﾌ|爪|ㄚ卂",
       "Hely",
-      "ㅤ𝓒𝓸𝓯𝓯𝓮𝓮 🫖☕ㅤ",
       "ㅤㅤ𝐋𝐀𝐌𝐘 !!"
     ],
-    "members": 299,
-    "updated_at": 1774254643
+    "members": 283,
+    "updated_at": 1774681768,
+    "telegram_owner_id": 8227738491,
+    "telegram_owner": "𝗞𝗔𝗡𝗛𝗔",
+    "static_owner_id": 6198299684,
+    "static_owner": "✨ 👑 **Gauri Shankar** ✨",
+    "dynamic_owner_id": null,
+    "dynamic_owner": "",
+    "owner_override": false
+  },
+  "-1003840202385": {
+    "chat_id": -1003840202385,
+    "title": "Atharva The warrior chat zone",
+    "owner_id": 6198299684,
+    "owner": "✨ 👑 **Gauri Shankar** ✨",
+    "admin_ids": [
+      8158965259,
+      8577122526
+    ],
+    "admins": [
+      "Aira ai"
+    ],
+    "members": 27,
+    "updated_at": 1774681765
   },
   "-1003833710907": {
     "chat_id": -1003833710907,
     "title": "Masti Ki Dhadkan 💞❤️",
-    "owner_id": 8699636212,
+    "owner_id": 6198299684,
     "owner": "✨ 👑 **Gauri Shankar** ✨",
     "admin_ids": [
       5266414635,
@@ -49,27 +69,39 @@
     ],
     "admins": [
       "Aira ai",
-      "Manas Singh Rajput",
+      "✨ 👑 **Gauri Shankar** ✨",
       "Jessica"
     ],
-    "members": 4,
-    "updated_at": 1774254642
+    "members": 7,
+    "updated_at": 1774681766
   },
   "-1003870702768": {
     "chat_id": -1003870702768,
     "title": "Research Aira Ai",
-    "owner_id": 5612964044,
-    "owner": "𝐂𝐡𝐞𝐜𝐤𝐦𝐚𝐭𝐞 𝐛𝐲 𝐉𝐚𝐯𝐚 ♟️☕",
+    "owner_id": 6198299684,
+    "owner": "✨ 👑 **Gauri Shankar** ✨",
     "admin_ids": [
       5612964044,
       6198299684,
       8158965259
     ],
     "admins": [
-      "Manas Singh Rajput",
+      "✨ 👑 **Gauri Shankar** ✨",
       "Aira ai"
     ],
-    "members": 7,
-    "updated_at": 1774254631
+    "members": 8,
+    "updated_at": 1774681764
+  },
+  "-1003540449926": {
+    "chat_id": -1003540449926,
+    "title": "Hshz",
+    "owner_id": 6198299684,
+    "owner": "✨ 👑 **Gauri Shankar** ✨",
+    "admin_ids": [
+      8383819788
+    ],
+    "admins": [],
+    "members": 4,
+    "updated_at": 1774681767
   }
 }

@@ -36,5 +36,11 @@
       "has_link": false
     }
   ],
-  "temp_blocked_users": {}
+  "temp_blocked_users": {},
+  "reply_check": {
+    "enabled_until": 0,
+    "started_at": 0,
+    "started_by": 0,
+    "recent_pairs": []
+  }
 }

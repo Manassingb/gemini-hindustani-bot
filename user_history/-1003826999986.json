@@ -329,7 +329,43 @@
       "user_id": 0,
       "kind": "bot_text",
       "has_link": false
+    },
+    {
+      "message_id": 475,
+      "user_id": 5351800965,
+      "kind": "media",
+      "has_link": false
+    },
+    {
+      "message_id": 476,
+      "user_id": 0,
+      "kind": "bot_broadcast",
+      "has_link": false
+    },
+    {
+      "message_id": 477,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
+    },
+    {
+      "message_id": 702,
+      "user_id": 8312980341,
+      "kind": "media",
+      "has_link": false
+    },
+    {
+      "message_id": 739,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
     }
   ],
-  "temp_blocked_users": {}
+  "temp_blocked_users": {},
+  "reply_check": {
+    "enabled_until": 0,
+    "started_at": 0,
+    "started_by": 0,
+    "recent_pairs": []
+  }
 }
