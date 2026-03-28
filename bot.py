@@ -3,6 +3,7 @@ import os
 import queue
 import random
 import re
+import shutil
 import sys
 import threading
 import time
@@ -18,7 +19,23 @@ from interaction_pack import (
 
 
 from dotenv import load_dotenv
-load_dotenv(".env", override=True)
+APP_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.abspath(
+    os.getenv("BOT_DATA_DIR")
+    or os.getenv("RAILWAY_VOLUME_MOUNT_PATH")
+    or APP_DIR
+)
+
+
+def app_path(*parts):
+    return os.path.join(APP_DIR, *parts)
+
+
+def data_path(*parts):
+    return os.path.join(DATA_DIR, *parts)
+
+
+load_dotenv(app_path(".env"), override=True)
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 
@@ -109,20 +126,20 @@ DAILY_GREETING_SCHEDULE = {
 }
 INTERACTION_CONTEXT_LIMIT = 200
 
-HISTORY_DIR = "user_history"
-MUTE_STATE_FILE = "mute_state.json"
-GROUPS_FILE = "groups.json"
-ITEMS_FILE = "items.json"
-WELCOME_USERS_FILE = "welcome_users.json"
-ADMIN_TITLES_FILE = "admin_titles.json"
-COMMAND_SPAM_FILE = "command_spam.json"
-OWNER_OVERRIDE_FILE = "owner_overrides.json"
-OWNER_PROFILE_FILE = "owner.json"
-GROUP_AUDIT_FILE = "group_audit.json"
-GROUP_ACTIVITY_FILE = "group_activity.json"
-SYSTEM_RUNTIME_FILE = "system_runtime.json"
-INSTANCE_LOCK_FILE = "bot.instance.lock"
-MESSAGE_AUDIT_DIR = "message_audit_logs"
+HISTORY_DIR = data_path("user_history")
+MUTE_STATE_FILE = data_path("mute_state.json")
+GROUPS_FILE = data_path("groups.json")
+ITEMS_FILE = data_path("items.json")
+WELCOME_USERS_FILE = data_path("welcome_users.json")
+ADMIN_TITLES_FILE = data_path("admin_titles.json")
+COMMAND_SPAM_FILE = data_path("command_spam.json")
+OWNER_OVERRIDE_FILE = data_path("owner_overrides.json")
+OWNER_PROFILE_FILE = data_path("owner.json")
+GROUP_AUDIT_FILE = data_path("group_audit.json")
+GROUP_ACTIVITY_FILE = data_path("group_activity.json")
+SYSTEM_RUNTIME_FILE = data_path("system_runtime.json")
+INSTANCE_LOCK_FILE = data_path("bot.instance.lock")
+MESSAGE_AUDIT_DIR = data_path("message_audit_logs")
 MESSAGE_AUDIT_RETENTION_SECONDS = 7 * 24 * 3600
 MESSAGE_AUDIT_QUEUE_MAXSIZE = 10000
 BRAJBHASHA_TRANSLATOR_URL = "https://translatormind.com/wp-admin/admin-ajax.php"
@@ -160,6 +177,44 @@ INTERACTION_MEDIA_PROVIDERS = {
     },
 }
 
+DATA_SEED_FILES = (
+    "mute_state.json",
+    "groups.json",
+    "items.json",
+    "welcome_users.json",
+    "admin_titles.json",
+    "command_spam.json",
+    "owner_overrides.json",
+    "owner.json",
+    "group_audit.json",
+    "group_activity.json",
+    "system_runtime.json",
+)
+DATA_SEED_DIRS = ("user_history", "message_audit_logs")
+
+
+def ensure_data_layout():
+    os.makedirs(DATA_DIR, exist_ok=True)
+    for file_name in DATA_SEED_FILES:
+        source = app_path(file_name)
+        target = data_path(file_name)
+        if source == target or os.path.exists(target) or not os.path.exists(source):
+            continue
+        shutil.copy2(source, target)
+
+    for dir_name in DATA_SEED_DIRS:
+        source = app_path(dir_name)
+        target = data_path(dir_name)
+        if source == target:
+            os.makedirs(target, exist_ok=True)
+            continue
+        if os.path.isdir(source) and not os.path.exists(target):
+            shutil.copytree(source, target, dirs_exist_ok=True)
+        else:
+            os.makedirs(target, exist_ok=True)
+
+
+ensure_data_layout()
 os.makedirs(HISTORY_DIR, exist_ok=True)
 os.makedirs(MESSAGE_AUDIT_DIR, exist_ok=True)
 
@@ -365,6 +420,9 @@ def load_json_file(path, default):
 
 
 def save_json_file(path, data):
+    parent = os.path.dirname(path)
+    if parent:
+        os.makedirs(parent, exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 

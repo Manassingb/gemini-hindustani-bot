@@ -36,6 +36,8 @@ BOT_TOKEN=...
 NVIDIA_API_KEY_1=...
 NVIDIA_API_KEY_2=...
 NVIDIA_API_KEY_3=...
+# Optional persistent data path for Railway Volume or any mounted disk
+BOT_DATA_DIR=/data
 ```
 
 5. Run the bot:
@@ -82,9 +84,20 @@ python3 bot.py
    - `BOT_TOKEN`
    - `NVIDIA_API_KEY_1`
    - Optional: `NVIDIA_API_KEY_2`, `NVIDIA_API_KEY_3`
+   - Optional for persistence: `BOT_DATA_DIR=/data`
 6. Click deploy.
 
 Every push to `main` will trigger auto-redeploy.
+
+## Persistent Bot Data on Railway
+
+If you want JSON files such as `groups.json`, `user_history`, `welcome_users.json`, and audit logs to survive restarts and redeploys:
+
+1. Add a Railway Volume and mount it at `/data`.
+2. Set `BOT_DATA_DIR=/data`.
+3. Redeploy the service.
+
+On first boot, the bot will seed existing tracked JSON files and folders into the mounted data directory if they are not already present.
 
 ## Validation Checklist
 
