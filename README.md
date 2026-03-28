@@ -6,7 +6,7 @@ This project runs a Telegram bot using long polling.
 
 - Python 3.10+
 - Telegram bot token from BotFather
-<!-- - Gemini API key -->
+- At least one NVIDIA API key
 
 ## Local Setup
 
@@ -33,15 +33,9 @@ cp .env.example .env
 
 ```env
 BOT_TOKEN=...
-<!-- GEMINI_API_KEY=... -->
-<!-- GEMINI_MODELS=gemini-2.0-flash,gemini-2.5-flash -->
-AI_MIN_INTERVAL_SECONDS=8
-QUOTA_COOLDOWN_SECONDS=120
-MENU_TIMEOUT_SECONDS=60
-MENU_HIDE_SECONDS=30
-MENU_MAX_LIFETIME_SECONDS=120
-POLL_TIMEOUT_SECONDS=15
-ADMIN_CHAT_ID=-1001234567890
+NVIDIA_API_KEY_1=...
+NVIDIA_API_KEY_2=...
+NVIDIA_API_KEY_3=...
 ```
 
 5. Run the bot:
@@ -53,11 +47,11 @@ python bot.py
 ## Required Environment Variables
 
 - `BOT_TOKEN`: Telegram bot token
-<!-- - `GEMINI_API_KEY`: Gemini API key -->
+- `NVIDIA_API_KEY_1` or `NVIDIA_API_KEYS`: NVIDIA API access for AI replies
 
 If either variable is missing, the bot exits immediately with a clear error.
 
-## Deploy to GitHub
+## Push to GitHub
 
 From project root:
 
@@ -70,7 +64,15 @@ git remote add origin https://github.com/<USERNAME>/<REPO>.git
 git push -u origin main
 ```
 
-## Deploy to Railway
+## Deploy from GitHub to Railway
+
+GitHub stores the code. The always-on polling bot itself should run on Railway.
+
+This repo includes [`railway.json`](./railway.json), so Railway will automatically start the bot with:
+
+```bash
+python3 bot.py
+```
 
 1. Login to Railway.
 2. Create `New Project`.
@@ -78,12 +80,9 @@ git push -u origin main
 4. Choose this repository.
 5. In Railway project variables, add:
    - `BOT_TOKEN`
-   <!-- - `GEMINI_API_KEY` -->
-6. Start command (only if auto-detection fails):
-
-```bash
-python bot.py
-```
+   - `NVIDIA_API_KEY_1`
+   - Optional: `NVIDIA_API_KEY_2`, `NVIDIA_API_KEY_3`
+6. Click deploy.
 
 Every push to `main` will trigger auto-redeploy.
 
@@ -117,11 +116,12 @@ Every push to `main` will trigger auto-redeploy.
 - Bot starts but no Telegram reply:
   - Re-check `BOT_TOKEN` validity from BotFather.
   - Confirm no second process is polling same token.
-<!-- - Gemini reply errors:
-  - Verify `GEMINI_API_KEY` is active and has model access.
-  - If quota is exceeded, bot automatically switches to local fallback replies. -->
+- AI reply errors:
+  - Verify `NVIDIA_API_KEY_1` is active.
+  - Add extra NVIDIA keys if you want fallback rotation.
 
 ## Notes
 
 - Architecture remains polling-based by design for minimal deployment changes.
+- GitHub alone does not run this bot 24/7; Railway (or another backend host) should run it.
 - `memory.yml` is currently not used by `bot.py`; in-memory conversation history is used.
