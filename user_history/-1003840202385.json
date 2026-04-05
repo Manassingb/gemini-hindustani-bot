@@ -2293,6 +2293,12 @@
       "user_id": 0,
       "kind": "bot_system_notice",
       "has_link": false
+    },
+    {
+      "message_id": 1388,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
     }
   ],
   "temp_blocked_users": {},

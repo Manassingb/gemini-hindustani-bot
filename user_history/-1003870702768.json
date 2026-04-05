@@ -1315,6 +1315,12 @@
       "user_id": 6198299684,
       "kind": "text",
       "has_link": false
+    },
+    {
+      "message_id": 3742,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
     }
   ],
   "temp_blocked_users": {},

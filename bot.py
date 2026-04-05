@@ -8,7 +8,8 @@ import sys
 import threading
 import time
 import fcntl
-
+import pytz
+from datetime import datetime
 import requests
 from dotenv import load_dotenv
 from interaction_pack import (
@@ -25,6 +26,7 @@ DATA_DIR = os.path.abspath(
     or os.getenv("RAILWAY_VOLUME_MOUNT_PATH")
     or APP_DIR
 )
+IST = pytz.timezone("Asia/Kolkata")
 
 
 def app_path(*parts):
@@ -403,6 +405,13 @@ FORBIDDEN_ADDRESS_VARIANTS = {
 # --- JSON / FILE HELPERS ---
 def load_welcome_users():
     return normalize_welcome_users_store(load_json_file(WELCOME_USERS_FILE, {}))
+
+
+
+def get_all_chat_ids():
+    groups = load_json_file(GROUPS_FILE, {})
+    return [int(chat_id) for chat_id in groups.keys()]
+
 
 def save_welcome_users(data):
     save_json_file(WELCOME_USERS_FILE, normalize_welcome_users_store(data))
@@ -2103,25 +2112,26 @@ def maybe_send_owner_return_welcome(chat, user):
 
 
 
+now = datetime.now(IST)
+today = now.strftime("%Y-%m-%d")
 
-def maybe_send_daily_greetings():
-    now = time.localtime()
-    date_key = time.strftime("%Y-%m-%d", now)
+for chat_id in get_all_chat_ids():
+    row = get_group_activity_entry(chat_id)
+    daily_greetings = row.get("daily_greetings", {})
+
     for greeting_key, schedule in DAILY_GREETING_SCHEDULE.items():
-        if now.tm_hour != schedule["hour"] or now.tm_min != schedule["minute"]:
-            continue
-        groups = normalize_group_store(load_json_file(GROUPS_FILE, {}))
-        for snapshot in groups.values():
-            chat_id = snapshot.get("chat_id")
-            if chat_id is None or is_group_muted(chat_id):
-                continue
-            activity_entry = get_group_activity_entry(chat_id)
-            if activity_entry.get("daily_greetings", {}).get(greeting_key) == date_key:
-                continue
-            greeting_text = build_daily_greeting_message(greeting_key)
-            if greeting_text:
-                send_message(chat_id, greeting_text)
-                mark_daily_greeting_sent(chat_id, greeting_key, date_key)
+        if now.hour == schedule["hour"] and now.minute == schedule["minute"]:
+            last_sent = daily_greetings.get(greeting_key)
+            if last_sent != today:
+                message = build_daily_greeting_message(greeting_key)
+                requests.post(
+                    f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
+                    json={
+                        "chat_id": chat_id,
+                        "text": message
+                    }
+                )
+                mark_daily_greeting_sent(chat_id, greeting_key, today)
 
 
 def scheduled_greeting_loop():

@@ -611,6 +611,12 @@
       "user_id": 5612964044,
       "kind": "media",
       "has_link": false
+    },
+    {
+      "message_id": 569,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
     }
   ],
   "temp_blocked_users": {},

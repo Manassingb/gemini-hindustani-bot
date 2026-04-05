@@ -20,7 +20,8 @@
       "8577122526": 1774680184
     },
     "daily_greetings": {
-      "good_morning": "2026-03-28"
+      "good_morning": "2026-03-28",
+      "good_afternoon": "2026-03-28"
     }
   },
   "-1003840202385": {
@@ -32,7 +33,8 @@
       "7250701041": 1774667943
     },
     "daily_greetings": {
-      "good_morning": "2026-03-28"
+      "good_morning": "2026-03-28",
+      "good_afternoon": "2026-03-28"
     }
   },
   "-1003833710907": {
@@ -44,7 +46,8 @@
       "5612964044": 1774680608
     },
     "daily_greetings": {
-      "good_morning": "2026-03-28"
+      "good_morning": "2026-03-28",
+      "good_afternoon": "2026-03-28"
     }
   },
   "-1003870702768": {
@@ -53,13 +56,16 @@
       "5612964044": 1774681035
     },
     "daily_greetings": {
-      "good_morning": "2026-03-28"
+      "good_morning": "2026-03-28",
+      "good_afternoon": "2026-03-28"
     }
   },
   "-1003540449926": {
     "presence_last_seen": {
       "5612964044": 1774680046
     },
-    "daily_greetings": {}
+    "daily_greetings": {
+      "good_afternoon": "2026-03-28"
+    }
   }
 }

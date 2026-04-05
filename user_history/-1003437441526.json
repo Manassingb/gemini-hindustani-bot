@@ -946,6 +946,12 @@
       "user_id": 1087968824,
       "kind": "media",
       "has_link": false
+    },
+    {
+      "message_id": 32588,
+      "user_id": 0,
+      "kind": "bot_text",
+      "has_link": false
     }
   ],
   "temp_blocked_users": {},
