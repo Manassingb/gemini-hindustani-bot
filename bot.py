@@ -8,8 +8,10 @@ import sys
 import threading
 import time
 import fcntl
-import pytz
-from datetime import datetime
+#import pytz
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
+IST = ZoneInfo("Asia/Kolkata")
 import requests
 from dotenv import load_dotenv
 from interaction_pack import (
@@ -26,7 +28,7 @@ DATA_DIR = os.path.abspath(
     or os.getenv("RAILWAY_VOLUME_MOUNT_PATH")
     or APP_DIR
 )
-IST = pytz.timezone("Asia/Kolkata")
+#IST = pytz.timezone("Asia/Kolkata")
 
 
 def app_path(*parts):
@@ -1931,6 +1933,24 @@ def build_owner_changed_message(chat_title, previous_owner_name, new_owner_name)
         f"🤍 Previous owner: *{safe_old}*.\n"
         "✨ Aira aapka warmly welcome karti hai."
     )
+def get_greeting_key():
+    now = datetime.now(ZoneInfo("Asia/Kolkata"))
+    hour = now.hour
+
+    if 5 <= hour < 12:
+        return "good_morning"
+    elif 12 <= hour < 17:
+        return "good_afternoon"
+    elif 17 <= hour < 21:
+        return "good_evening"
+    else:
+        return "good_night"
+
+
+
+
+
+
 
 
 def build_daily_greeting_message(greeting_key):
@@ -1956,7 +1976,7 @@ def build_daily_greeting_message(greeting_key):
             "💫 Kal phir milte hain, Aira yahin rahegi."
         ),
     }
-    return messages.get(greeting_key, "")
+    return messages.get(greeting_key, messages["good_morning"])
 
 
 def record_bot_added_event(chat, actor, welcome_message=None):
@@ -2113,25 +2133,38 @@ def maybe_send_owner_return_welcome(chat, user):
 
 
 now = datetime.now(IST)
-today = now.strftime("%Y-%m-%d")
+print(now)
+def maybe_send_daily_greetings():
+    now = datetime.now(IST)
+    today = now.strftime("%Y-%m-%d")
 
-for chat_id in get_all_chat_ids():
-    row = get_group_activity_entry(chat_id)
-    daily_greetings = row.get("daily_greetings", {})
+    for chat_id in get_all_chat_ids():
+        row = get_group_activity_entry(chat_id)
+        daily_greetings = row.get("daily_greetings", {})
 
-    for greeting_key, schedule in DAILY_GREETING_SCHEDULE.items():
-        if now.hour == schedule["hour"] and now.minute == schedule["minute"]:
-            last_sent = daily_greetings.get(greeting_key)
-            if last_sent != today:
-                message = build_daily_greeting_message(greeting_key)
-                requests.post(
-                    f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
-                    json={
+        for greeting_key, schedule in DAILY_GREETING_SCHEDULE.items():
+            scheduled_time = now.replace(
+                hour=schedule["hour"],
+                minute=schedule["minute"],
+                second=0,
+                microsecond=0
+            )
+
+            if abs((now - scheduled_time).total_seconds()) < 60:
+                last_sent = daily_greetings.get(greeting_key)
+
+                if last_sent != today:
+                    message = build_daily_greeting_message(greeting_key)
+
+                    requests.post(
+                        f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
+                        json={
                         "chat_id": chat_id,
                         "text": message
-                    }
-                )
-                mark_daily_greeting_sent(chat_id, greeting_key, today)
+                        }
+                    )
+
+                    mark_daily_greeting_sent(chat_id, greeting_key, today)
 
 
 def scheduled_greeting_loop():
@@ -3787,15 +3820,6 @@ def get_show_commands_text():
         "Default slash menu me full interaction pack dikhega. Extra owner/admin commands private owner chat menu me visible rahenge."
     )
 
-
-
-
-
-
-
-
-
-
 # --- OWNER PROTECTION ---
 
 def contains_owner_mention(text):
@@ -3812,11 +3836,6 @@ def contains_owner_mention(text):
             return True
 
     return False
-
-
-
-
-
 
 # --- AI ---
 
